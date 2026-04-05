@@ -1,0 +1,34 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./tsconfig.config.json"
+    },
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.vitest.json"
+    }
+  ],
+  "include": [
+    "src/**/*",
+    "types",
+    "./auto-imports.d.ts",
+    "./components.d.ts",
+  ],
+  "compilerOptions" : {
+    "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "strict": true,
+    "baseUrl": "./",
+    "types": [
+      "vite-plugin-glsl/ext"
+    ],
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    "target": "es2021",
+  },
+  "exclude": ["node_modules", "src/**/*.spec.ts"]
+}
