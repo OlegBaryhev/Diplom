@@ -1,0 +1,63 @@
+@use 'transitions';
+@forward './libs/main.scss';
+@import 'animate.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import './fonts/RobotoFlex/stylesheet.css';
+
+@layer base {
+  body,
+  html {
+    @apply text-black antialiased;
+  }
+
+  :focus,
+  :active {
+    @apply outline-0;
+  }
+}
+
+@layer utilities {
+  .text-lg-medium-uppercase,
+  .text-base-medium-uppercase,
+  .text-sm-medium-uppercase,
+  .text-xs-medium-uppercase {
+    @apply uppercase;
+  }
+
+  .outline-none {
+    outline: none !important;
+    outline-offset: 0 !important;
+    box-shadow: none !important;
+  }
+}
+
+.focus-element {
+  outline: 4px solid transparent;
+  outline-offset: -4px;
+}
+
+.focus-element:focus-visible {
+  outline-color: theme('colors.main.400');
+}
+
+.full-link {
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+}
+
+.Vue-Toastification__toast {
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+// body {
+//   background: theme('colors.additional.DEFAULT');
+//   color: theme('colors.white');
+// }

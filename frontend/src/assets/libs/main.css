@@ -1,0 +1,45 @@
+.os-viewport {
+  z-index: inherit !important;
+}
+
+.os-scrollbar-handle {
+  transition: width 0.1s ease-in-out, height 0.1s ease-in-out !important;
+  background-color: theme("colors.additional.200") !important;
+  border-radius: 16px !important;
+}
+
+.os-scrollbar:hover.os-scrollbar-vertical .os-scrollbar-handle {
+  width: 8px !important;
+}
+
+.os-scrollbar-vertical {
+  width: 25px !important;
+}
+.os-scrollbar-vertical .os-scrollbar-handle {
+  width: 4px !important;
+  right: 0;
+}
+
+.os-scrollbar:hover.os-scrollbar-horizontal .os-scrollbar-handle {
+  height: 8px !important;
+}
+
+.os-scrollbar-horizontal {
+  height: 25px !important;
+}
+.os-scrollbar-horizontal .os-scrollbar-handle {
+  height: 4px !important;
+  bottom: 0;
+}
+
+.v-popper--theme-dropdown .v-popper__inner {
+  border: none !important;
+}
+
+.v-popper--theme-strongly-rounded-dropdown .v-popper__inner {
+  border-radius: 16px !important;
+}
+
+.v-popper__arrow-container {
+  display: none !important;
+}/*# sourceMappingURL=main.css.map */

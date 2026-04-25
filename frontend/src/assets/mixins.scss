@@ -1,0 +1,42 @@
+@use 'sass:math';
+
+@mixin scrollbar($size: 20px, $thumb-size: 4px) {
+  &::-webkit-scrollbar {
+    width: $size;
+    height: $size;
+
+    &-thumb {
+      $border-width: math.div($size - $thumb-size, 2);
+
+      border-radius: math.div($size, 2);
+      border: $border-width solid transparent;
+      min-height: 48px;
+      background-color: theme('colors.additional.200');
+      background-clip: padding-box;
+
+      &:hover {
+        border-left-width: $border-width - 1px;
+      }
+    }
+  }
+}
+
+@mixin animatedСhevron($size: 20px, $isTop: true, $currentColor: currentColor) {
+  $svg: url(./svg/mono/down.svg);
+  content: '';
+  width: $size;
+  height: $size;
+  background-color: $currentColor;
+  -webkit-mask: no-repeat center / 100%;
+  mask: no-repeat center / 100%;
+  -webkit-mask-image: $svg;
+  mask-image: $svg;
+
+  display: block;
+  transition: transform 0.2s cubic-bezier(1.0, 0.5, 0.5, 1.0);
+  transform: translateY(-50%) rotateZ(0deg);
+
+  @if $isTop {
+    transform: translateY(-50%) rotateZ(180deg);
+  }
+}
