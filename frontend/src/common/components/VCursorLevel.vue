@@ -1,7 +1,7 @@
 <template>
   <div
     ref="cursorLevelContainer"
-    class="cursor-level"
+    class="cursor-level min-w-[50px]"
   >
     <div
       class="cursor-level__cursor"

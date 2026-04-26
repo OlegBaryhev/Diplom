@@ -1,5 +1,5 @@
 <template>
-  <section class="auth-wrapper relative flex w-[100vw] h-full flex-wrap items-center justify-center">
+  <section class="auth-wrapper relative flex w-[100vw] min-h-full h-full flex-wrap items-center justify-center">
     <aside class="auth-wrapper__title-aside pl-5 items-center pl-5 flex h-full justify-center w-[50vw] gap-[130px]">
       <VCursorLevel
         class="h-[80%]"
@@ -84,19 +84,18 @@
           <div class="flex items-center mt-6 gap-6 w-full max-w-[825px]">
             <VBtn
               text="Применить"
-              outlined
               icon="arrow-right"
               icon-scale="0.7"
               type="submit"
               :disabled="saveChangesLoading"
             />
 
-            <span
+            <VBtn
+              text="Очистить"
+              outlined
               :disabled="saveChangesLoading"
-              role="button"
-              tabindex="2"
-              @click="clearForm"
-            >Очистить</span>
+              @click="clearForm()"
+            />
           </div>
         </div>
       </form>
@@ -109,6 +108,7 @@ import { cloneDeep } from 'lodash';
 import { useRouter } from 'vue-router';
 import { useVuelidate } from '@vuelidate/core';
 import { required, helpers } from '@vuelidate/validators';
+
 import {
   validEmail,
   checkLength,
@@ -126,7 +126,7 @@ const DEFAULT_FORM: IAuthForm = {
   password: '',
 };
 
-const formModel = ref<IAuthForm>(DEFAULT_FORM);
+const formModel = ref<IAuthForm>(cloneDeep(DEFAULT_FORM));
 const resultAPIError = ref<string>('');
 const passwordError = ref<string>('');
 
@@ -159,6 +159,7 @@ const saveChangesLoading = ref<boolean>(false);
 const clearForm = () => {
   v$.value.$reset();
   resultAPIError.value = '';
+  confirmation.value = '';
   formModel.value = cloneDeep(DEFAULT_FORM);
 };
 

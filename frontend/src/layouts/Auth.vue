@@ -1,6 +1,6 @@
 <template>
-  <main class="auth-layout flex items-center flex-col h-[100vh] relative">
-    <header class="h-[80px] w-full flex items-center justify-start px-6">
+  <main class="auth-layout flex items-center flex-col h-[100vh] relative justify-center items-center">
+    <header class="h-[80px] min-h-[80px] w-full flex items-center justify-start px-6">
       <span
         class="h-min flex select-none"
         role="button"
@@ -11,10 +11,13 @@
         {{ isLogin ? 'Регистрация' : 'Авторизация' }}
       </span>
     </header>
-    <div class="auth-layout__viewport h-full">
+    <div class="auth-layout__viewport flex flex-wrap h-full">
       <RouterView v-slot="{ Component }">
         <Transition :name="isLogin ? 'slide-left' : 'slide-right'">
-          <Component :is="Component" />
+          <Component
+            :is="Component"
+            :key="isLogin ? 1 : 2"
+          />
         </Transition>
       </RouterView>
     </div>
