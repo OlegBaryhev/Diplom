@@ -153,3 +153,11 @@ const register = async (): Promise<void> => {
   }
 };
 </script>
+
+<style lang="scss" scoped>
+@media (max-width: 1600px) {
+  .auth-wrapper__title-aside {
+    display: none;
+  }
+}
+</style>

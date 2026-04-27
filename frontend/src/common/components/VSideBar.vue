@@ -4,7 +4,7 @@
     v-scroll-lock="blackoutIsActive"
     class="side-bar__blackout fixed top-0 bg-black w-screen h-screen z-[80] transition-opacity ease-in-out duration-300"
     :class="{
-      'active': blackoutIsActive
+      'active': blackoutIsActive,
     }"
     data-test="toggleMenu"
     @click="setMenuState(false)"
@@ -12,9 +12,10 @@
 
   <aside
     ref="verticalMenu"
-    class="select-none side-bar fixed top-0 left-0 flex flex-col overflow-x-hidden bg-white z-[80] h-screen w-22 min-w-22 border-r border-main-200"
+    class="select-none side-bar fixed top-0 left-0 flex flex-col overflow-x-hidden z-[80] h-screen w-22 min-w-22 border-r border-main-200"
     :class="{
       'open': menuState,
+      'blured-style': bluredStyle,
     }"
   >
     <VTooltip
@@ -53,8 +54,8 @@
       class="overflow-x-hidden side-bar__content"
     >
       <template
-        v-for="menuItem of filteredVerticalMenu"
-        :key="menuItem.id"
+        v-for="(menuItem, index) of filteredVerticalMenu"
+        :key="menuItem?.id ?? index"
       >
         <template v-if="userHasRouteAccess(menuItem)">
           <VTooltip
@@ -268,6 +269,11 @@ const userStore = useUser();
 const modalStore = useModals();
 
 const user = computed(() => userStore.user);
+const props = withDefaults(defineProps<{
+  bluredStyle?: boolean;
+}>(), {
+  bluredStyle: true,
+});
 
 const storeScrollCount = useScrollCount();
 
@@ -304,6 +310,7 @@ onMounted(() => {
       setEndPositionFlag(e.elements().content);
     },
   });
+
   observer.value?.observe(sideBar.value.children[1]);
 });
 
@@ -385,6 +392,33 @@ onBeforeUnmount(() => blackoutIsActive.value && storeScrollCount.decrease());
   z-index: 81;
   transition: width 0.3s ease-in-out, min-width 0.3s ease-in-out;
 
+  &:not(.blured-style){
+    @apply bg-white;
+  }
+
+  &.blured-style {
+    background: #0000000e;
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+    * {
+      color: #fff;
+    }
+
+    #{$root} {
+      &__item-wrap {
+        background: transparent;
+      }
+
+      &__submenu-item {
+        background: transparent;
+      }
+
+      &__item {
+        background: transparent;
+      }
+    }
+  }
+
   &__blackout {
     @apply inset-0 bg-black/40;
 
@@ -460,6 +494,7 @@ onBeforeUnmount(() => blackoutIsActive.value && storeScrollCount.decrease());
     padding-left: 40px;
     border-radius: 8px;
     background-color: theme('colors.white');
+
     &-wrap {
       white-space: nowrap;
       display: block;
@@ -489,6 +524,7 @@ onBeforeUnmount(() => blackoutIsActive.value && storeScrollCount.decrease());
 
   &__bottom {
     position: relative;
+
     &::before{
      content: '';
      display: flex;

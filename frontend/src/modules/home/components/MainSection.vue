@@ -19,7 +19,7 @@
 
     <div class="main-section__fixed-layer fixed w-full h-screen">
       <div class="main-section__cursor h-screen ml-[100px] flex flex-col  justify-center">
-        <VCursorLevel class="h-[60%]" />
+        <VCursorLevel class="h-[60%] ml-[5vw]" />
       </div>
     </div>
 
@@ -198,13 +198,15 @@ onUnmounted(() => {
   --sections-count: v-bind(sectionsCount);
 
   min-height: 100vh;
-  width: 100%;
+  width: 100vw;
   display: flex;
+  position: absolute;
+  left: 0;
   flex-direction: column;
 
   &__canvas-wrapper{
     display: flex;
-    width: calc(100vw - 88px);
+    width: 100vw;
     z-index: -1;
     position: fixed;
     justify-content: center;
