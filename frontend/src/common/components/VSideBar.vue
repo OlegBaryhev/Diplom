@@ -272,7 +272,7 @@ const user = computed(() => userStore.user);
 const props = withDefaults(defineProps<{
   bluredStyle?: boolean;
 }>(), {
-  bluredStyle: true,
+  bluredStyle: false,
 });
 
 const storeScrollCount = useScrollCount();
@@ -394,27 +394,65 @@ onBeforeUnmount(() => blackoutIsActive.value && storeScrollCount.decrease());
 
   &:not(.blured-style){
     @apply bg-white;
+    #{$root} {
+      &__item {
+        @apply group-hover:bg-main-50;
+      }
+    }
   }
 
   &.blured-style {
-    background: #0000000e;
-    backdrop-filter: blur(10px);
-    overflow: hidden;
-    * {
-      color: #fff;
+    background: transparent;
+
+    &::before {
+      content: '';
+      background: #0000000e;
+      backdrop-filter: blur(10px);
+      width: 100%;
+      height: 100%;
+      position: absolute;
+    }
+    :deep() {
+      .profile-item__image {
+        border: 1px solid theme('colors.main.400');
+        backdrop-filter: blur(10px);
+        box-shadow: inset 0 0 1px theme('colors.main.400'), 0 0 1px theme('colors.main.400');
+        background: #0000000e;
+      }
+
+      .profile-item__username{
+        @apply text-white;
+      }
     }
 
     #{$root} {
       &__item-wrap {
         background: transparent;
+        &:hover #{$root}__item {
+          filter: drop-shadow(0px 0px 4px color-mix(in srgb, theme('colors.main.300') 50%, #ffffff00 50%));
+        }
       }
 
       &__submenu-item {
+        @apply text-white;
         background: transparent;
       }
 
       &__item {
+        @apply text-white;
         background: transparent;
+        transition: all ease-out 0.5s;
+
+        &--active {
+
+          #{$root}__item-name, #{$root}__item-icon  {
+            filter: drop-shadow(0px 0px 4px color-mix(in srgb, theme('colors.main.300') 50%, #ffffff00 50%));
+          }
+        }
+
+        &:before {
+          box-shadow: 0 0 10px theme('colors.main.400');
+        }
       }
     }
   }
@@ -445,13 +483,14 @@ onBeforeUnmount(() => blackoutIsActive.value && storeScrollCount.decrease());
   }
 
   &__item {
-    @apply text-base-regular text-additional group-hover:text-main-400 bg-white group-hover:bg-main-50 ease-in-out duration-300;
+    @apply text-base-regular text-additional group-hover:text-main-400 bg-white ease-in-out duration-300;
     display: flex;
     align-items: center;
     width: 100%;
     height: 100%;
     border-radius: 8px;
     padding: 0 16px;
+    transition: all ease-out 0.5s;
     cursor: pointer;
 
     &-name {
@@ -471,7 +510,7 @@ onBeforeUnmount(() => blackoutIsActive.value && storeScrollCount.decrease());
         width: 4px;
         height: 100%;
         background: theme('colors.main.400');
-        border-radius: 2px;
+        border-radius: 10px;
         left: 0;
       }
     }
@@ -494,6 +533,7 @@ onBeforeUnmount(() => blackoutIsActive.value && storeScrollCount.decrease());
     padding-left: 40px;
     border-radius: 8px;
     background-color: theme('colors.white');
+    transition: all ease-out 0.5s;
 
     &-wrap {
       white-space: nowrap;

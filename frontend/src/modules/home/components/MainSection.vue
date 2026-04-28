@@ -223,6 +223,7 @@ onUnmounted(() => {
     position: relative;
     width: 100%;
     overflow: auto;
+
     :deep() [data-overlayscrollbars-viewport] {
       scroll-snap-type: y proximity;
     }
@@ -235,6 +236,7 @@ onUnmounted(() => {
     pointer-events: all;
     background: transparent;
     transition: all 0.2s ease-in;
+
     &:hover {
       transform: scale(102%);
     }

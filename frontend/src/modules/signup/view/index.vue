@@ -1,6 +1,6 @@
 <template>
   <section class="auth-wrapper relative flex w-[100vw] min-h-full h-full flex-wrap items-center justify-center">
-    <aside class="auth-wrapper__title-aside pl-5 items-center pl-5 flex h-full justify-center w-[50vw] gap-[130px]">
+    <aside class="auth-wrapper__title-aside pl-5 items-center pr-5 flex h-full justify-center w-[50vw] gap-[130px]">
       <VCursorLevel
         class="h-[80%]"
         is-black
@@ -203,7 +203,7 @@ const register = async (): Promise<void> => {
 </script>
 
 <style lang="scss" scoped>
-@media (max-width: 1600px) {
+@media (max-width: 1700px) {
   .auth-wrapper__title-aside {
     display: none;
   }
