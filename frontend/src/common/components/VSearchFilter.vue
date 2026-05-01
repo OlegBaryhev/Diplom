@@ -140,11 +140,7 @@
 </template>
 
 <script lang="ts" setup>
-import {
-  remove,
-  cloneDeep,
-  unionBy,
-} from 'lodash';
+import { cloneDeep } from 'lodash';
 
 import { api } from '@/api';
 import { SAME_MEANING_WORDS_GROUPS } from '@/consts/same-meaning-words-group';

@@ -414,10 +414,14 @@ onBeforeUnmount(() => blackoutIsActive.value && storeScrollCount.decrease());
     }
     :deep() {
       .profile-item__image {
-        border: 1px solid theme('colors.main.400');
+        border: 1px solid theme('colors.white');
         backdrop-filter: blur(10px);
-        box-shadow: inset 0 0 1px theme('colors.main.400'), 0 0 1px theme('colors.main.400');
+        box-shadow: inset 0 0 1px theme('colors.white'), 0 0 1px theme('colors.white');
         background: #0000000e;
+      }
+
+      .profile-item__icon{
+        color: theme('colors.white');
       }
 
       .profile-item__username{
@@ -428,6 +432,7 @@ onBeforeUnmount(() => blackoutIsActive.value && storeScrollCount.decrease());
     #{$root} {
       &__item-wrap {
         background: transparent;
+
         &:hover #{$root}__item {
           filter: drop-shadow(0px 0px 4px color-mix(in srgb, theme('colors.main.300') 50%, #ffffff00 50%));
         }
