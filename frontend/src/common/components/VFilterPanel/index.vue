@@ -29,7 +29,7 @@
         <div
           class="filter-panel__footer mt-4 flex gap-2 items-center">
           <VTooltip
-            content="Очистить"
+            content="ть"
             hover-tooltip
             center
           >

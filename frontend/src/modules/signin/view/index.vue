@@ -1,6 +1,6 @@
 <template>
-  <section class="auth-wrapper relative flex w-[100vw] h-full flex-wrap items-center justify-center gap-5">
-    <aside class="auth-wrapper__title-aside flex items-center h-full justify-center w-[50vw] gap-[130px]">
+  <section class="auth-wrapper relative flex w-[100vw] min-h-full h-full flex-wrap items-center justify-center gap-5">
+    <aside class="auth-wrapper__title-aside flex items-center pl-5 pr-5 h-full min-w-[500px] justify-center w-[50vw] gap-[130px]">
       <VCursorLevel
         class="h-[80%]"
         is-black
@@ -12,7 +12,9 @@
       </h1>
     </aside>
 
-    <aside class="auth-wrapper__form w-[50vw] max-w-[900px] min-w-[600px] h-fit flex flex-col gap-6 items-start justify-center">
+    <aside
+      class="auth-wrapper__form w-[50vw] max-w-[900px] min-w-[700px] h-fit flex flex-col gap-6 items-start justify-center"
+    >
       <form
         class="flex flex-col gap-6 justify-center w-[75%]"
         @submit.prevent="register();"
@@ -53,21 +55,18 @@
           <div class="flex items-center mt-6 gap-6 w-full max-w-[825px]">
             <VBtn
               text="Применить"
-              outlined
               icon="arrow-right"
               icon-scale="0.7"
               type="submit"
               :disabled="saveChangesLoading"
             />
 
-            <span
+            <VBtn
+              text="Очистить"
+              outlined
               :disabled="saveChangesLoading"
-              role="button"
-              tabindex="2"
               @click="clearForm"
-            >
-              Очистить
-            </span>
+            />
           </div>
         </div>
       </form>
@@ -98,7 +97,7 @@ const DEFAULT_FORM: TLogin = {
   password: '',
 };
 
-const formModel = ref<TLogin>(DEFAULT_FORM);
+const formModel = ref<TLogin>(cloneDeep(DEFAULT_FORM));
 const resultAPIError = ref<string>('');
 
 const validationRules = computed(() => ({
@@ -154,3 +153,11 @@ const register = async (): Promise<void> => {
   }
 };
 </script>
+
+<style lang="scss" scoped>
+@media (max-width: 1700px) {
+  .auth-wrapper__title-aside {
+    display: none;
+  }
+}
+</style>

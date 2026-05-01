@@ -4,7 +4,7 @@
     v-scroll-lock="blackoutIsActive"
     class="side-bar__blackout fixed top-0 bg-black w-screen h-screen z-[80] transition-opacity ease-in-out duration-300"
     :class="{
-      'active': blackoutIsActive
+      'active': blackoutIsActive,
     }"
     data-test="toggleMenu"
     @click="setMenuState(false)"
@@ -12,9 +12,10 @@
 
   <aside
     ref="verticalMenu"
-    class="select-none side-bar fixed top-0 left-0 flex flex-col overflow-x-hidden bg-white z-[80] h-screen w-22 min-w-22 border-r border-main-200"
+    class="select-none side-bar fixed top-0 left-0 flex flex-col overflow-x-hidden z-[80] h-screen w-22 min-w-22 border-r border-main-200"
     :class="{
       'open': menuState,
+      'blured-style': bluredStyle,
     }"
   >
     <VTooltip
@@ -53,8 +54,8 @@
       class="overflow-x-hidden side-bar__content"
     >
       <template
-        v-for="menuItem of filteredVerticalMenu"
-        :key="menuItem.id"
+        v-for="(menuItem, index) of filteredVerticalMenu"
+        :key="menuItem?.id ?? index"
       >
         <template v-if="userHasRouteAccess(menuItem)">
           <VTooltip
@@ -268,6 +269,11 @@ const userStore = useUser();
 const modalStore = useModals();
 
 const user = computed(() => userStore.user);
+const props = withDefaults(defineProps<{
+  bluredStyle?: boolean;
+}>(), {
+  bluredStyle: false,
+});
 
 const storeScrollCount = useScrollCount();
 
@@ -304,6 +310,7 @@ onMounted(() => {
       setEndPositionFlag(e.elements().content);
     },
   });
+
   observer.value?.observe(sideBar.value.children[1]);
 });
 
@@ -385,6 +392,71 @@ onBeforeUnmount(() => blackoutIsActive.value && storeScrollCount.decrease());
   z-index: 81;
   transition: width 0.3s ease-in-out, min-width 0.3s ease-in-out;
 
+  &:not(.blured-style){
+    @apply bg-white;
+    #{$root} {
+      &__item {
+        @apply group-hover:bg-main-50;
+      }
+    }
+  }
+
+  &.blured-style {
+    background: transparent;
+
+    &::before {
+      content: '';
+      background: #0000000e;
+      backdrop-filter: blur(10px);
+      width: 100%;
+      height: 100%;
+      position: absolute;
+    }
+    :deep() {
+      .profile-item__image {
+        border: 1px solid theme('colors.main.400');
+        backdrop-filter: blur(10px);
+        box-shadow: inset 0 0 1px theme('colors.main.400'), 0 0 1px theme('colors.main.400');
+        background: #0000000e;
+      }
+
+      .profile-item__username{
+        @apply text-white;
+      }
+    }
+
+    #{$root} {
+      &__item-wrap {
+        background: transparent;
+        &:hover #{$root}__item {
+          filter: drop-shadow(0px 0px 4px color-mix(in srgb, theme('colors.main.300') 50%, #ffffff00 50%));
+        }
+      }
+
+      &__submenu-item {
+        @apply text-white;
+        background: transparent;
+      }
+
+      &__item {
+        @apply text-white;
+        background: transparent;
+        transition: all ease-out 0.5s;
+
+        &--active {
+
+          #{$root}__item-name, #{$root}__item-icon  {
+            filter: drop-shadow(0px 0px 4px color-mix(in srgb, theme('colors.main.300') 50%, #ffffff00 50%));
+          }
+        }
+
+        &:before {
+          box-shadow: 0 0 10px theme('colors.main.400');
+        }
+      }
+    }
+  }
+
   &__blackout {
     @apply inset-0 bg-black/40;
 
@@ -411,13 +483,14 @@ onBeforeUnmount(() => blackoutIsActive.value && storeScrollCount.decrease());
   }
 
   &__item {
-    @apply text-base-regular text-additional group-hover:text-main-400 bg-white group-hover:bg-main-50 ease-in-out duration-300;
+    @apply text-base-regular text-additional group-hover:text-main-400 bg-white ease-in-out duration-300;
     display: flex;
     align-items: center;
     width: 100%;
     height: 100%;
     border-radius: 8px;
     padding: 0 16px;
+    transition: all ease-out 0.5s;
     cursor: pointer;
 
     &-name {
@@ -437,7 +510,7 @@ onBeforeUnmount(() => blackoutIsActive.value && storeScrollCount.decrease());
         width: 4px;
         height: 100%;
         background: theme('colors.main.400');
-        border-radius: 2px;
+        border-radius: 10px;
         left: 0;
       }
     }
@@ -460,6 +533,8 @@ onBeforeUnmount(() => blackoutIsActive.value && storeScrollCount.decrease());
     padding-left: 40px;
     border-radius: 8px;
     background-color: theme('colors.white');
+    transition: all ease-out 0.5s;
+
     &-wrap {
       white-space: nowrap;
       display: block;
@@ -489,6 +564,7 @@ onBeforeUnmount(() => blackoutIsActive.value && storeScrollCount.decrease());
 
   &__bottom {
     position: relative;
+
     &::before{
      content: '';
      display: flex;

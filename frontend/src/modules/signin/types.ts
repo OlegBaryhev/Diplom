@@ -7,4 +7,4 @@ export interface IAuthForm {
 export type TLogin = {
   email: string,
   password: string,
-}
+};

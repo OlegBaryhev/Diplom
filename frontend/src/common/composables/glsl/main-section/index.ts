@@ -11,12 +11,14 @@ import firstShader from './shader/firstShader';
 import secondShader from './shader/secondShader';
 
 interface additionOptions {
-  useObserver?: boolean,
-  defaultStart?: boolean,
-  imageAspect?: number,
-  mouseTolerance?: number,
-  containerScrollTop?: number,
-  MAX_CAMERA_ANGLE?: number,
+  useObserver?: boolean;
+  defaultStart?: boolean;
+  imageAspect?: number;
+  mouseOffsetX?: number;
+  mouseOffsetY?: number;
+  mouseTolerance?: number;
+  containerScrollTop?: number;
+  MAX_CAMERA_ANGLE?: number;
 }
 
 export const useMainSectionShader = (
@@ -27,6 +29,8 @@ export const useMainSectionShader = (
     defaultStart = true,
     mouseTolerance = 0.000012,
     containerScrollTop = 0,
+    mouseOffsetX = -0.05,
+    mouseOffsetY = 0,
     MAX_CAMERA_ANGLE = 30,
   }: additionOptions = {} as additionOptions,
 ) => {
@@ -126,7 +130,7 @@ export const useMainSectionShader = (
   const mat = new THREE.ShaderMaterial(secondShader);
 
   const smallSphere = new THREE.Mesh(new THREE.SphereGeometry(0.7, 64, 64), mat);
-  smallSphere.position.set(0, 0, camera.position.z - 1.5);
+  smallSphere.position.set(mouseOffsetX, mouseOffsetY, camera.position.z - 1.5);
   scene.add(smallSphere);
   /** ------------------------------------------------ */
 
