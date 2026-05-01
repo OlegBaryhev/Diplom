@@ -35,14 +35,22 @@
           class="text-white flex flex-col h-full w-full"
         >
           <div class="main-section__content h-full w-full flex items-center justify-center pr-[100px]">
-            <h1 class="main-section__main-title flex flex-col justify-center gap-0 text-center select-none text-[80px]">
+            <h1 class="main-section__main-title flex flex-col ml-[100px] mb-[-100px] justify-center gap-0 text-center select-none text-[80px]">
               <span
-                class="leading-[70px] mb-3 wow fadeInDown"
+                class="leading-[70px] wow fadeInDown"
                 data-wow-duration="2s"
                 data-wow-delay="5s"
-              >Система ценообразования</span>
-              <strong class="leading-[110px] text-[120px] uppercase">"Doge Devices"</strong>
+              >
+                <strong class="leading-[150px] text-[170px] font-black uppercase">
+                  <p class="main-section__main-title--before">Doge Devices</p>
+                  <p class="main-section__main-title--current">Doge Devices</p>
+                  <p class="main-section__main-title--after">Doge Devices</p>
+                </strong>
+              </span>
             </h1>
+            <div class="main-section__control-buttons">
+              <button></button>
+            </div>
           </div>
 
           <div
@@ -193,6 +201,15 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
+@keyframes textShine {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
 .main-section {
   --parallax-padding: v-bind('PARALLAX_PADDING + "px"');
   --sections-count: v-bind(sectionsCount);
@@ -227,6 +244,25 @@ onUnmounted(() => {
     :deep() [data-overlayscrollbars-viewport] {
       scroll-snap-type: y proximity;
     }
+
+    &::after {
+      content: '';
+      width: 100vw;
+      height: 100vh;
+      left: 0;
+      top: 0;
+      position: fixed;
+      user-select: none;
+      pointer-events: none;
+      box-shadow: inset 0 2vw 20vw 2vw #000000, inset 0 2vw 60vw 1vw #00000077, inset 0 0 30vw 1vw #0000006d;
+      z-index: 100;
+    }
+  }
+
+  &__control-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
   }
 
   &__news-item {
@@ -259,6 +295,48 @@ onUnmounted(() => {
     scroll-margin-top: 30px;
     scroll-snap-align: center;
     transition: opacity 0.2s ease-in;
+  }
+
+  &__main-title {
+    position: relative;
+    width: 55vw;
+    height: 140px;
+
+    &--before {
+      top: 5px;
+      left: 5px;
+      color: rgba(0, 0, 0, 0.1);
+      filter: blur(10px);
+      position: absolute;
+    }
+
+    &--after {
+      --gradient-opacity: 0.8;
+      top: 0;
+      left: 0;
+      position: absolute;
+      // background: linear-gradient(
+      //   to right,
+      //   rgb(62, 71, 49, var(--gradient-opacity)) 20%,
+      //   rgb(127, 115, 73, var(--gradient-opacity)) 30%,
+      //   rgb(110, 82, 46, var(--gradient-opacity)) 70%,
+      //   rgb(17, 13, 9, var(--gradient-opacity)) 80%
+      // );
+      // -webkit-background-clip: text;
+      // background-clip: text;
+      // -webkit-text-fill-color: transparent;
+      // text-fill-color: transparent;
+      // background-size: 200% auto;
+      // animation: textShine 5s ease-in-out infinite alternate;
+    }
+
+    &--current {
+      top: -5px;
+      left: -5px;
+      color: rgba(255, 255, 255, 0.1);
+      filter: blur(10px);
+      position: absolute;
+    }
   }
 }
 </style>

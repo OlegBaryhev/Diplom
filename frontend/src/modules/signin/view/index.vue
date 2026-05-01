@@ -2,7 +2,7 @@
   <section class="auth-wrapper relative flex w-[100vw] min-h-full h-full flex-wrap items-center justify-center gap-5">
     <aside class="auth-wrapper__title-aside flex items-center pl-5 pr-5 h-full min-w-[500px] justify-center w-[50vw] gap-[130px]">
       <VCursorLevel
-        class="h-[80%]"
+        class="ml-[6vw] h-[80%]"
         is-black
       />
       <h1 class="auth-wrapper__title flex flex-col text-[60px] font-bold mb-4 select-none uppercase">
@@ -13,10 +13,10 @@
     </aside>
 
     <aside
-      class="auth-wrapper__form w-[50vw] max-w-[900px] min-w-[700px] h-fit flex flex-col gap-6 items-start justify-center"
+      class="auth-wrapper__form-wrapper w-[50vw] max-w-[900px] min-w-[700px] h-fit flex flex-col gap-6 items-start justify-center"
     >
       <form
-        class="flex flex-col gap-6 justify-center w-[75%]"
+        class="auth-wrapper__form flex flex-col gap-6 justify-center w-[75%]"
         @submit.prevent="register();"
       >
         <div class="auth-wrapper__info border-l-2 border-black pl-5 w-full flex flex-col gap-2">
@@ -155,9 +155,19 @@ const register = async (): Promise<void> => {
 </script>
 
 <style lang="scss" scoped>
-@media (max-width: 1700px) {
-  .auth-wrapper__title-aside {
-    display: none;
+@media (max-width: 1800px) {
+  .auth-wrapper {
+    &__title-aside {
+      display: none;
+    }
+
+    &__form {
+      width: 100%;
+    }
+
+    &__form-wrapper {
+      width: 100vw !important;
+    }
   }
 }
 </style>
