@@ -1,0 +1,32 @@
+SUPERUSER_PERMISSIONS = {
+    "home": {"all_subsections": ["read"]},
+    "products": {"all_subsections": ["read", "write", "edit", "delete", "buy", "download", "recalculate"]},
+    "orders": {"all_subsections": ["read", "write", "edit", "delete"]},
+    "carts": {"all_subsections": ["read", "write", "edit", "delete"]},
+    "profile": {"all_subsections": ["read", "write", "edit", "delete", "status", "change-role"]},
+    "analogs": {"all_subsections": ["read", "write", "edit", "delete"]},
+    "recalculate_history": {"all_subsections": ["read", "write", "edit", "delete"]},
+    "users_control": {"all_subsections": ["read", "write", "edit", "delete", "status", "change-role", "download"]},
+    "more": {"all_subsections": ["read"]},
+    "categories": {"all_subsections": ["read", "write", "edit", "delete"]},
+    "brands": {"all_subsections": ["read", "write", "edit", "delete"]},
+}
+
+MODERATOR_PERMISSIONS = {
+    "home": {"all_subsections": ["read"]},
+    "products": {"all_subsections": ["read", "edit", "write", "delete", "buy", "download"]},
+    "profile": {"all_subsections": ["read", "write", "edit", "delete", "status", "change-role"]},
+    "more": {"all_subsections": ["read"]},
+    "categories": {"all_subsections": ["read", "edit", "write", "delete"]},
+    "brands": {"all_subsections": ["read", "edit", "write", "delete"]},
+    "orders": {"all_subsections": ["read", "edit", "delete"]},
+}
+
+GUEST_PERMISSIONS = {
+    "home": {"all_subsections": ["read"]},
+    "products": {"all_subsections": ["read", "buy"]},
+    "profile": {"all_subsections": ["read", "write", "edit", "delete", "status", "change-role"]},
+    "more": {"all_subsections": ["read"]},
+    "categories": {"all_subsections": ["read"]},
+    "brands": {"all_subsections": ["read"]},
+}

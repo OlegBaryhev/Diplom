@@ -1,17 +1,51 @@
 import random
+import os
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.models import Category, Product, Brand, Analog, User
+from app.models.role import Role
 from app.database import SessionLocal
 from passlib.context import CryptContext
+from dotenv import load_dotenv
+from app.auth.permissions_data import SUPERUSER_PERMISSIONS, MODERATOR_PERMISSIONS, GUEST_PERMISSIONS
+
+load_dotenv("security.env")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 async def init_data():
     async with SessionLocal() as session:
+        result = await session.execute(select(Role))
+        existing_roles = {role.name: role for role in result.scalars().all()}
+
+        if "superuser" not in existing_roles:
+            superuser_role = Role(name="superuser", permissions=SUPERUSER_PERMISSIONS)
+            session.add(superuser_role)
+        else:
+            superuser_role = existing_roles["superuser"]
+
+        if "moderator" not in existing_roles:
+            moderator_role = Role(name="moderator", permissions=MODERATOR_PERMISSIONS)
+            session.add(moderator_role)
+        else:
+            moderator_role = existing_roles["moderator"]
+
+        if "guest" not in existing_roles:
+            guest_role = Role(name="guest", permissions=GUEST_PERMISSIONS)
+            session.add(guest_role)
+        else:
+            guest_role = existing_roles["guest"]
+
+        await session.commit()
+
+        result = await session.execute(select(Role))
+        roles = {role.name: role for role in result.scalars().all()}
+        superuser_role = roles["superuser"]
+        moderator_role = roles["moderator"]
+        guest_role = roles["guest"]
+
         result = await session.execute(select(Category))
         categories = result.scalars().all()
-
         if not categories:
             categories = []
             for i in range(1, 11):
@@ -19,27 +53,23 @@ async def init_data():
                 session.add(c)
                 categories.append(c)
             await session.commit()
-
-        result = await session.execute(select(Category))
-        categories = result.scalars().all()
-
-        result = await session.execute(select(Product))
-        products = result.scalars().all()
+            result = await session.execute(select(Category))
+            categories = result.scalars().all()
 
         result_brand = await session.execute(select(Brand))
         brands = result_brand.scalars().all()
-
         if not brands:
             brands = []
             for i in range(1, 11):
-                b = Brand(
-                    name=f"Бренд_{i}",
-                    description=f"Описание бренда {i}"
-                )
+                b = Brand(name=f"Бренд_{i}", description=f"Описание бренда {i}")
                 session.add(b)
                 brands.append(b)
             await session.commit()
+            result_brand = await session.execute(select(Brand))
+            brands = result_brand.scalars().all()
 
+        result = await session.execute(select(Product))
+        products = result.scalars().all()
         if not products:
             for i in range(1, 11):
                 price = random.randint(50000, 1500000)
@@ -57,7 +87,6 @@ async def init_data():
 
         result_analogs = await session.execute(select(Analog))
         analogs = result_analogs.scalars().all()
-
         if not analogs:
             for i in range(1, 11):
                 price = random.randint(50000, 1500000)
@@ -74,17 +103,20 @@ async def init_data():
             await session.commit()
 
         admin_email = "administrator@gmail.com"
+        admin_password = os.getenv("ADMIN_PASSWORD")
+
+        if not admin_password:
+            raise ValueError("ADMIN_PASSWORD not set in security.env")
         existing_admin = await session.execute(select(User).where(User.email == admin_email))
         admin_user = existing_admin.scalars().first()
-
         if not admin_user:
-            hashed_password = pwd_context.hash("admin123")
+            hashed_password = pwd_context.hash(admin_password)
             admin_user = User(
                 name="Админ",
                 surname="Админович",
                 email=admin_email,
                 hashed_password=hashed_password,
-                role="superuser",
+                role_id=superuser_role.id,
                 is_active=1,
             )
             session.add(admin_user)
