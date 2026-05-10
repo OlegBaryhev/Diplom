@@ -63,7 +63,7 @@ async def recalculate_relative_current_price(
     history = RecalculateHistory(
         name=req.name,
         description=req.description,
-        recalculated_by=current_user.username,  # Используем username текущего пользователя
+        recalculated_by=current_user.username,
         parameters=req.dict(exclude={"recalculated_by"}),
     )
     session.add(history)

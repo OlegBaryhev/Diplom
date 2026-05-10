@@ -20,7 +20,6 @@ class User(Base):
     is_active = Column(Integer, default=1)
     avatar_url = Column(String, nullable=True)
 
-    # Связь с таблицей roles (имя role_obj)
     role_obj = relationship("Role", foreign_keys=[role_id])
 
     cart_items = relationship("CartItem", back_populates="user", cascade="all, delete-orphan")
@@ -28,7 +27,6 @@ class User(Base):
 
     @property
     def role(self) -> UserRole | None:
-        """Для обратной совместимости: возвращает Enum по имени роли"""
         if self.role_obj:
             return UserRole(self.role_obj.name)
         return None
