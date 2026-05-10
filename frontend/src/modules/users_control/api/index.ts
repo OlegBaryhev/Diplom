@@ -20,4 +20,5 @@ export const deleteUserRequest = (userId: number | string) => api.delete(`${REMO
 export const exportUsersRequest = (data: any) =>
   api.post(`${REMOTE_SERVER_URL}/user/export/xlsx`, data, { responseType: 'blob' });
 
-export const getRolesRequest = () => api.get(`${REMOTE_SERVER_URL}/roles/`);
+export const getRolesRequest = () =>
+  api.get(`${REMOTE_SERVER_URL}/roles/`);

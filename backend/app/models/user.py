@@ -20,17 +20,15 @@ class User(Base):
     is_active = Column(Integer, default=1)
     avatar_url = Column(String, nullable=True)
 
-    role = relationship("Role")
+    # Связь с таблицей roles (имя role_obj)
+    role_obj = relationship("Role", foreign_keys=[role_id])
+
     cart_items = relationship("CartItem", back_populates="user", cascade="all, delete-orphan")
     orders = relationship("Order", back_populates="user", cascade="all, delete-orphan")
 
     @property
-    def role_enum(self) -> UserRole | None:
-        if self.role:
-            return UserRole(self.role.name)
+    def role(self) -> UserRole | None:
+        """Для обратной совместимости: возвращает Enum по имени роли"""
+        if self.role_obj:
+            return UserRole(self.role_obj.name)
         return None
-
-    def __getattr__(self, name):
-        if name == "role":
-            return self.role_enum
-        raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")

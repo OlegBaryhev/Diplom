@@ -3,7 +3,7 @@ import os
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.models import Category, Product, Brand, Analog, User
-from app.models.role import Role
+from app.models.roles import Role
 from app.database import SessionLocal
 from passlib.context import CryptContext
 from dotenv import load_dotenv

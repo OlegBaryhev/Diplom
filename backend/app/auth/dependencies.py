@@ -28,7 +28,7 @@ async def get_current_user(
         raise credentials_exception
 
     result = await session.execute(
-        select(User).where(User.id == user_id).options(selectinload(User.role))
+        select(User).where(User.id == user_id).options(selectinload(User.role_obj))
     )
     user = result.scalar_one_or_none()
     if user is None or not user.is_active:
@@ -37,7 +37,7 @@ async def get_current_user(
 
 def has_permission(section: str, action: str):
     async def dependency(current_user: User = Depends(get_current_user)):
-        if current_user.role is None:
+        if current_user.role_obj is None:
             default_perms = {
                 "home": {"all_subsections": ["read"]},
                 "products": {"all_subsections": ["read", "buy"]}
@@ -45,7 +45,7 @@ def has_permission(section: str, action: str):
             if default_perms.get(section, {}).get("all_subsections", []).count(action):
                 return True
             raise HTTPException(status_code=403, detail="Insufficient permissions")
-        if current_user.role.has_permission(section, action):
+        if current_user.role_obj.has_permission(section, action):
             return True
         raise HTTPException(status_code=403, detail="Insufficient permissions")
     return dependency

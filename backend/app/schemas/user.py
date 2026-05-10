@@ -1,5 +1,11 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional, Dict, List
+from enum import Enum
+
+class UserRole(str, Enum):
+    superuser = "superuser"
+    moderator = "moderator"
+    guest = "guest"
 
 class UserBase(BaseModel):
     email: EmailStr
@@ -19,3 +25,7 @@ class UserRead(UserBase):
 
     class Config:
         from_attributes = True
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str

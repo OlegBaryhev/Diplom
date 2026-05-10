@@ -3,23 +3,30 @@ import { loginRequest, fetchMyself } from '@/api/auth';
 import type { UserItem } from '@/modules/users_control/types';
 import type { registerParams } from '@/common/types';
 import { useStoreRouter } from '@/stores/storeRouter';
+import { getRolesRequest } from '@/modules/users_control/api';
 
 export const useUser = defineStore('user', () => {
   const user = ref<UserItem | null>(null);
   const token = ref(localStorage.getItem('token') || null);
   const storeRouter = useStoreRouter();
   const { replace } = storeRouter.router;
-  const loading = ref<boolean>();
+  const loading = ref(false);
+  const allRoles = ref<any[]>([]);
 
   const getUser = async (): Promise<UserItem | null> => {
     const { data: myselfData } = await fetchMyself();
     user.value = myselfData;
-    return Promise.resolve(user.value);
+    try {
+      const { data: roles } = await getRolesRequest();
+      allRoles.value = roles;
+    } catch (e) {
+      console.warn('У пользователя отсутствуют права');
+    }
+    return user.value;
   };
 
   const login = async (registerData: registerParams, setToken: boolean = true, withReplace: boolean = true): Promise<UserItem | null> => {
     loading.value = true;
-
     try {
       const req = await loginRequest(registerData);
       if (req?.response?.data?.detail === 'Incorrect email or password') {
@@ -29,7 +36,7 @@ export const useUser = defineStore('user', () => {
         localStorage.setItem('token', req?.data?.access_token);
         token.value = req?.data?.access_token;
         await getUser();
-        withReplace && await replace({ name: 'home' });
+        if (withReplace) await replace({ name: 'home' });
       }
     } catch (e) {
       console.error(e);
@@ -37,8 +44,7 @@ export const useUser = defineStore('user', () => {
     } finally {
       loading.value = false;
     }
-
-    return Promise.resolve(user.value);
+    return user.value;
   };
 
   const resetUser = () => {
@@ -49,7 +55,6 @@ export const useUser = defineStore('user', () => {
 
   const logout = async (): Promise<void> => {
     resetUser();
-
     await replace({ name: 'register' });
   };
 
@@ -61,5 +66,6 @@ export const useUser = defineStore('user', () => {
     logout,
     resetUser,
     loading,
+    allRoles,
   };
 });

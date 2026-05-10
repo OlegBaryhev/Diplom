@@ -6,7 +6,7 @@ from sqlalchemy.orm import selectinload
 from fastapi.responses import StreamingResponse
 from app.database import get_session
 from app.models.user import User
-from app.models.role import Role
+from app.models.roles import Role
 from app.schemas.user import UserRead, UserBase
 from app.auth.dependencies import get_current_user, has_permission
 from app.auth.security import get_password_hash

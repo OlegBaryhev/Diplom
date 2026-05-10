@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
-from app.routes import products, category, cart, order, auth_routes, brand, user, analogs, recalculate, recalculate_history
+from app.routes import products, category, cart, order, auth_routes, brand, user, analogs, recalculate, recalculate_history, roles
 from app.database import create_tables
 from app.init_data import init_data
 import logging
@@ -37,6 +37,7 @@ app.include_router(user.router, prefix="/user", tags=["User"])
 app.include_router(analogs.router, prefix="/analogs", tags=["Analogs"])
 app.include_router(recalculate.router, prefix="/recalculate", tags=["Recalculate"])
 app.include_router(recalculate_history.router, prefix="/recalculate_history", tags=["RecalculateHistory"])
+app.include_router(roles.router, prefix="/roles", tags=["Roles"])
 
 logger = logging.getLogger("uvicorn.error")
 
