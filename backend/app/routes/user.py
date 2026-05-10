@@ -86,7 +86,7 @@ async def search_users(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(has_permission("users_control", "read"))
 ):
-    query = select(User).options(selectinload(User.role))
+    query = select(User).options(selectinload(User.role_obj))
 
     if search:
         query = query.filter(
@@ -115,9 +115,9 @@ async def read_user(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ):
-    if not (current_user.role and current_user.role.name == "superuser") and current_user.id != user_id:
+    if not (current_user.role_obj and current_user.role_obj.name == "superuser") and current_user.id != user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
-    result = await session.execute(select(User).where(User.id == user_id).options(selectinload(User.role)))
+    result = await session.execute(select(User).where(User.id == user_id).options(selectinload(User.role_obj)))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -130,7 +130,7 @@ async def update_user(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session)
 ):
-    if not (current_user.role and current_user.role.name == "superuser") and current_user.id != user_id:
+    if not (current_user.role_obj and current_user.role_obj.name == "superuser") and current_user.id != user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized")
 
     result = await session.execute(select(User).where(User.id == user_id))
@@ -145,7 +145,7 @@ async def update_user(
     if user_update.surname is not None:
         user.surname = user_update.surname
 
-    if user_update.role_id is not None and current_user.role and current_user.role.has_permission("users_control", "change-role"):
+    if user_update.role_id is not None and current_user.role_obj and current_user.role_obj.has_permission("users_control", "change-role"):
         role_result = await session.execute(select(Role).where(Role.id == user_update.role_id))
         new_role = role_result.scalar_one_or_none()
         if not new_role:
@@ -200,7 +200,7 @@ async def export_users_xlsx(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(has_permission("users_control", "download")),
 ):
-    query = select(User).options(selectinload(User.role))
+    query = select(User).options(selectinload(User.role_obj))
 
     if search:
         query = query.filter(
@@ -227,7 +227,7 @@ async def export_users_xlsx(
             "Email": user.email,
             "Name": user.name,
             "Surname": user.surname,
-            "Role": user.role.name if user.role else None,
+            "Role": user.role_obj.name if user.role_obj else None,
             "Is Active": bool(user.is_active),
             "Avatar URL": user.avatar_url,
         })
@@ -241,7 +241,6 @@ async def export_users_xlsx(
     headers = {
         "Content-Disposition": f'attachment; filename="{filename}"'
     }
-
     return StreamingResponse(
         output,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

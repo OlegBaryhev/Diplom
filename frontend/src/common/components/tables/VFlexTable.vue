@@ -12,8 +12,10 @@
     >
       <VFlexTableRow :row-height="headerRowHeight">
         <VFlexTableCell
-          v-if="itemChecking"
-          :class="{ 'invisible': !hasAnyPermission }"
+          :class="{
+            'invisible': !hasAnyPermission,
+            'system-invisible': !itemChecking,
+          }"
           is-columnheader
           :skeleton="skeleton"
         >
@@ -126,8 +128,10 @@
               @animationend="onAnimationEnd"
             >
               <VFlexTableCell
-                v-if="itemChecking"
-                :class="{ 'invisible': !hasAnyPermission }"
+                :class="{
+                  'invisible': !hasAnyPermission,
+                  'system-invisible': !itemChecking,
+                }"
                 :skeleton="skeleton"
                 @click.stop
                 @click.self.prevent
@@ -429,6 +433,13 @@ $tile-bg: #cfcfdf;
   50% {
     background: theme('colors.main.200');
   }
+}
+.system-invisible {
+  @apply invisible;
+  width: 0 !important;
+  max-width: 0 !important;
+  min-width: 0 !important;
+  padding: 0 !important;
 }
 
 .flex-table {

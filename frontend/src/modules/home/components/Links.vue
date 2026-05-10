@@ -1,19 +1,26 @@
 <template>
   <div class="pl-4">
-    <div class="menu mt-4">
+    <div
+      class="menu mt-4"
+      :class="{
+        'menu--flex': filteredMenu?.list?.length <= 3
+      }"
+    >
       <div
         v-for="menuItem of filteredMenu.list"
         :key="menuItem.id"
         class="menu__wrapper"
         :style="{
-          'grid-row': menuItem?.submenu ? `span ${menuItem.submenu.length + 1}` : null,
+          ...(filteredMenu?.list?.length > 3 && {'grid-row': menuItem?.submenu ? `span ${menuItem.submenu.length + 1}` : null}),
         }"
       >
         <RouterLink
           v-if="!menuItem.submenu && menuItem.routeName !== 'main'"
           :to="{ name: menuItem.routeName }"
           class="menu__link"
-          :class="{'menu__link--disabled': menuItem.disabled}"
+          :class="{
+            'menu__link--disabled': menuItem.disabled
+          }"
         >
           <div
             tabindex="0"
@@ -85,6 +92,7 @@ const calculatedColumnsCount = computed(() => Math.max(Math.ceil(filteredMenu.va
 
 <style lang="scss" scoped>
 .menu {
+  $root: &;
   --columns-count: v-bind(calculatedColumnsCount);
 
   $items-width: 252px;
@@ -96,6 +104,11 @@ const calculatedColumnsCount = computed(() => Math.max(Math.ceil(filteredMenu.va
   min-width: $items-width;
   max-width: min(calc(var(--columns-count) * ($items-width + 10px)), calc(100vw - 88px));
 
+  &--flex {
+    display: flex;
+    flex-direction: column;
+  }
+
   &__wrapper {
     margin: 8px;
   }
@@ -106,6 +119,8 @@ const calculatedColumnsCount = computed(() => Math.max(Math.ceil(filteredMenu.va
     font-size: 26px;
     width: $items-width;
     color: theme('colors.white');
+    transform-origin: left;
+    transition: transform 0.2s ease-in-out, filter 0.2s ease-in-out;
 
     &--title {
       font-size: 26px;
@@ -113,9 +128,15 @@ const calculatedColumnsCount = computed(() => Math.max(Math.ceil(filteredMenu.va
       width: $items-width;
       color: theme('colors.white');
     }
+
     &:not(&--disabled) {
       &:hover, &:focus {
-        color: theme('colors.main.400');
+        transform: scale(105%);
+      }
+
+      &:active {
+        transform: scale(95%);
+        filter: brightness(90%);
       }
     }
 

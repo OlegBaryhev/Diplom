@@ -1,6 +1,12 @@
+import enum
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 from app.database import Base
+
+class UserRole(str, enum.Enum):
+    superuser = "superuser"
+    moderator = "moderator"
+    guest = "guest"
 
 class User(Base):
     __tablename__ = "user"
@@ -17,3 +23,14 @@ class User(Base):
     role = relationship("Role")
     cart_items = relationship("CartItem", back_populates="user", cascade="all, delete-orphan")
     orders = relationship("Order", back_populates="user", cascade="all, delete-orphan")
+
+    @property
+    def role_enum(self) -> UserRole | None:
+        if self.role:
+            return UserRole(self.role.name)
+        return None
+
+    def __getattr__(self, name):
+        if name == "role":
+            return self.role_enum
+        raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
