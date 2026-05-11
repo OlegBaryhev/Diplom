@@ -155,7 +155,9 @@
                     class="side-bar__submenu-item side-bar__item-name focus-element"
                     tabindex="-1"
                     role="button"
-                    :class="{'side-bar__submenu-item--active': routerIncludesUrl(submenuItem) }"
+                    :class="{
+                      'side-bar__submenu-item--active': routerIncludesUrl(submenuItem),
+                    }"
                     @keydown.enter="router.push({ name: submenuItem.routeName }); toggleAccordion($event); linkClicked();"
                   >
                     {{ submenuItem.name }}

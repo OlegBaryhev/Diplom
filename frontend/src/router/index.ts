@@ -35,6 +35,20 @@ const routes = [
         },
       },
       {
+        path: '/roles',
+        name: 'roles',
+        component: () => import('../modules/roles/view/index.vue'),
+        meta: {
+          title: 'Роли - Система ценообразования "Doge Devices"',
+          requiresAuth: true,
+          requiresSuperuser: true,
+          breadcrumb: [{
+            to: '',
+            text: 'Главная',
+          }],
+        },
+      },
+      {
         path: '/analogs',
         name: 'analogs',
         component: () => import('../modules/analogs/view/index.vue'),

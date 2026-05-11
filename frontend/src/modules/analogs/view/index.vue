@@ -330,9 +330,10 @@ fetchAnalogs();
       padding-left: 12px;
       padding-right: 12px;
     }
+
     // Действия
     &:nth-child(7) {
-      min-width: 100px;
+      min-width: 160px;
       width: 100%;
       max-width: 100px;
     }
