@@ -3,7 +3,6 @@ import { loginRequest, fetchMyself } from '@/api/auth';
 import type { UserItem } from '@/modules/users_control/types';
 import type { registerParams } from '@/common/types';
 import { useStoreRouter } from '@/stores/storeRouter';
-import { getRolesRequest } from '@/modules/users_control/api';
 
 export const useUser = defineStore('user', () => {
   const user = ref<UserItem | null>(null);
@@ -11,17 +10,10 @@ export const useUser = defineStore('user', () => {
   const storeRouter = useStoreRouter();
   const { replace } = storeRouter.router;
   const loading = ref(false);
-  const allRoles = ref<any[]>([]);
 
   const getUser = async (): Promise<UserItem | null> => {
     const { data: myselfData } = await fetchMyself();
     user.value = myselfData;
-    try {
-      const { data: roles } = await getRolesRequest();
-      allRoles.value = roles;
-    } catch (e) {
-      console.warn('У пользователя отсутствуют права');
-    }
     return user.value;
   };
 
@@ -66,6 +58,5 @@ export const useUser = defineStore('user', () => {
     logout,
     resetUser,
     loading,
-    allRoles,
   };
 });
