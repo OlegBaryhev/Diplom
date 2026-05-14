@@ -5,8 +5,6 @@ import { useUser } from '@/stores/user';
 import type { Permissions } from '../types/permissions';
 
 export const userHasRouteAccess = (routeAccess: RouteMenu | RouteRecordRaw, parentRouteName?: string): boolean => {
-  if (import.meta.env.MODE === 'development' || localStorage.getItem('ignorePermissions')) return true;
-
   const userStore = useUser();
   const user = unref(userStore.user);
   if (!user) return false;
@@ -17,7 +15,7 @@ export const userHasRouteAccess = (routeAccess: RouteMenu | RouteRecordRaw, pare
   const { routeName, name, path } = routeAccess;
   const effectiveRouteName = routeName || name;
 
-  if (effectiveRouteName && permissions[effectiveRouteName]?.allSubsections) return true;
+  if (effectiveRouteName && permissions[effectiveRouteName]?.all_subsections) return true;
   if (parentRouteName && permissions[parentRouteName]?.[effectiveRouteName as string]) return true;
 
   const routePath = path?.split('/').filter(Boolean) || [];
@@ -38,14 +36,12 @@ export const userHasRouteAccess = (routeAccess: RouteMenu | RouteRecordRaw, pare
   if (!section) return false;
   const sectionPerms = permissions[section];
   if (!sectionPerms) return false;
-  if (sectionPerms.allSubsections) return true;
+  if (sectionPerms.all_subsections) return true;
   if (subSection && sectionPerms[subSection]) return true;
   return false;
 };
 
 export const userHasPermission = (action: Permissions): boolean => {
-  if (import.meta.env.MODE === 'development' || localStorage.getItem('ignorePermissions')) return true;
-
   const userStore = useUser();
   const user = unref(userStore.user);
   if (!user) return false;
@@ -60,7 +56,7 @@ export const userHasPermission = (action: Permissions): boolean => {
   const sectionPerms = permissions[section];
   if (!sectionPerms) return false;
 
-  if (sectionPerms.allSubsections?.includes(action)) return true;
+  if (sectionPerms.all_subsections?.includes(action)) return true;
   if (subSection && sectionPerms[subSection]?.includes(action)) return true;
   return false;
 };

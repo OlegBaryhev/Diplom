@@ -279,7 +279,10 @@ const props = withDefaults(defineProps<{
   actionsList: [],
 });
 
-const showIdComputed = computed(() => props?.showId && (userHasPermission(Permissions.Write) || userHasPermission(Permissions.Edit) || userHasPermission(Permissions.Delete)));
+const showIdComputed = computed(() => props?.showId
+  && (userHasPermission(Permissions.Write)
+  || userHasPermission(Permissions.Edit)
+  || userHasPermission(Permissions.Delete)));
 
 // eslint-disable-next-line func-call-spacing, no-spaced-func
 const emit = defineEmits<{

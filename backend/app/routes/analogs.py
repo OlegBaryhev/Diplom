@@ -14,7 +14,7 @@ import pandas as pd
 
 from app.database import get_session
 from app.models.analogs import Analog
-from app.schemas.analogs import AnalogRead, AnalogCreate, AnalogBase
+from app.schemas.analogs import AnalogRead
 
 router = APIRouter()
 

@@ -8,7 +8,6 @@ from app.models.roles import Role
 from app.models.user import User
 from app.schemas.roles import RoleRead, RoleCreate, RoleUpdate
 from app.auth.dependencies import get_current_user
-from app.auth.security import get_password_hash
 
 router = APIRouter()
 
@@ -16,6 +15,15 @@ async def is_superuser(current_user: User = Depends(get_current_user)) -> User:
     if not current_user.role_obj or current_user.role_obj.name != "superuser":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only superuser can manage roles")
     return current_user
+
+@router.get("/", response_model=list[RoleRead])
+async def get_roles(
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(is_superuser)
+):
+    result = await session.execute(select(Role).order_by(Role.id))
+    roles = result.scalars().all()
+    return roles
 
 @router.post("/search", response_model=List[RoleRead])
 async def search_roles(
