@@ -20,7 +20,6 @@ LOG_MODELS = {
     "brand": BrandLog,
     "order": OrderLog,
     "product": ProductLog,
-    "recalculate_history": RecalculateHistoryLog,
 }
 
 async def get_log_model(table_name: str):

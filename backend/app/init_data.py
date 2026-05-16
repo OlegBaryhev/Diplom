@@ -51,7 +51,6 @@ async def init_data():
             ("brand", 30, 5),
             ("order", 30, 5),
             ("product", 30, 5),
-            ("recalculate_history", 30, 5),
         ]
         for table_name, time_min, count_limit in default_log_settings:
             existing_setting = await session.execute(

@@ -16,8 +16,6 @@ BEGIN
         log_table_name := 'order_log';
     ELSIF TG_TABLE_NAME = 'products' THEN
         log_table_name := 'product_log';
-    ELSIF TG_TABLE_NAME = 'recalculate_history' THEN
-        log_table_name := 'recalculate_history_log';
     ELSE
         RAISE EXCEPTION 'Unknown table: %', TG_TABLE_NAME;
     END IF;
@@ -45,7 +43,6 @@ DROP TRIGGER IF EXISTS category_log_trigger ON categories;
 DROP TRIGGER IF EXISTS brand_log_trigger ON brands;
 DROP TRIGGER IF EXISTS order_log_trigger ON orders;
 DROP TRIGGER IF EXISTS product_log_trigger ON products;
-DROP TRIGGER IF EXISTS recalculate_history_log_trigger ON recalculate_history;
 
 -- Создаём триггеры
 CREATE TRIGGER user_log_trigger
@@ -66,8 +63,4 @@ CREATE TRIGGER order_log_trigger
 
 CREATE TRIGGER product_log_trigger
     AFTER INSERT OR UPDATE OR DELETE ON products
-    FOR EACH ROW EXECUTE FUNCTION log_change();
-
-CREATE TRIGGER recalculate_history_log_trigger
-    AFTER INSERT OR UPDATE OR DELETE ON recalculate_history
     FOR EACH ROW EXECUTE FUNCTION log_change();

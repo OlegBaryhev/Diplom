@@ -37,13 +37,6 @@ class ProductLog(Base):
     changed_at = Column(DateTime(timezone=True), server_default=func.now())
     row_data = Column(JSON, nullable=False)
 
-class RecalculateHistoryLog(Base):
-    __tablename__ = "recalculate_history_log"
-    id = Column(Integer, primary_key=True)
-    operation = Column(String(10), nullable=False)
-    changed_at = Column(DateTime(timezone=True), server_default=func.now())
-    row_data = Column(JSON, nullable=False)
-
 class LogSettings(Base):
     __tablename__ = "log_settings"
     id = Column(Integer, primary_key=True)

@@ -11,7 +11,6 @@ LOG_MODELS = {
     "brand": BrandLog,
     "order": OrderLog,
     "product": ProductLog,
-    "recalculate_history": RecalculateHistoryLog,
 }
 
 async def clean_logs_for_table(session: AsyncSession, table_name: str, model, settings):

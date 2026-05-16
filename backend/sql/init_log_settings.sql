@@ -5,5 +5,4 @@ VALUES
     ('brand', 30, 5),
     ('order', 30, 5),
     ('product', 30, 5),
-    ('recalculate_history', 30, 5)
 ON CONFLICT (table_name) DO NOTHING;
