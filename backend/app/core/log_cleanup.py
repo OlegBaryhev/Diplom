@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import select, delete, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import SessionLocal
-from app.models.logs import LogSettings, UserLog, CategoryLog, BrandLog, OrderLog, ProductLog, RecalculateHistoryLog
+from app.models.logs import LogSettings, UserLog, CategoryLog, BrandLog, OrderLog, ProductLog
 
 LOG_MODELS = {
     "user": UserLog,

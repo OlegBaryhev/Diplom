@@ -5,8 +5,7 @@ from sqlalchemy.sql import asc, desc
 from typing import Optional, List
 from app.database import get_session
 from app.models.logs import (
-    UserLog, CategoryLog, BrandLog, OrderLog, ProductLog, RecalculateHistoryLog,
-    LogSettings
+    UserLog, CategoryLog, BrandLog, OrderLog, ProductLog, LogSettings
 )
 from app.schemas.logs import LogEntryBase, LogFilter, LogSettingsBase, LogSettingsUpdate
 from app.auth.dependencies import get_current_user, has_permission
