@@ -4,8 +4,11 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
 from app.routes import products, category, cart, order, auth_routes, brand, user, analogs, recalculate, recalculate_history, roles
-from app.database import create_tables
+from app.routes.logs import router as logs_router
+from app.database import create_tables, init_logs
 from app.init_data import init_data
+from app.core.log_cleanup import start_log_cleanup_scheduler
+import asyncio
 import logging
 
 app = FastAPI(
@@ -38,6 +41,7 @@ app.include_router(analogs.router, prefix="/analogs", tags=["Analogs"])
 app.include_router(recalculate.router, prefix="/recalculate", tags=["Recalculate"])
 app.include_router(recalculate_history.router, prefix="/recalculate_history", tags=["RecalculateHistory"])
 app.include_router(roles.router, prefix="/roles", tags=["Roles"])
+app.include_router(logs_router, prefix="/logs", tags=["Logs"])
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -53,4 +57,6 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 @app.on_event("startup")
 async def startup():
     await create_tables()
+    await init_logs()
     await init_data()
+    asyncio.create_task(start_log_cleanup_scheduler(interval_minutes=5))

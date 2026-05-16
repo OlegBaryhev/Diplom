@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from app.models import Category, Product, Brand, Analog, User
 from app.models.roles import Role
+from app.models.logs.log_models import LogSettings
 from app.database import SessionLocal
 from passlib.context import CryptContext
 from dotenv import load_dotenv
@@ -43,6 +44,26 @@ async def init_data():
         superuser_role = roles["superuser"]
         moderator_role = roles["moderator"]
         guest_role = roles["guest"]
+
+        default_log_settings = [
+            ("user", 30, 5),
+            ("category", 30, 5),
+            ("brand", 30, 5),
+            ("order", 30, 5),
+            ("product", 30, 5),
+            ("recalculate_history", 30, 5),
+        ]
+        for table_name, time_min, count_limit in default_log_settings:
+            existing_setting = await session.execute(
+                select(LogSettings).where(LogSettings.table_name == table_name)
+            )
+            if not existing_setting.scalar_one_or_none():
+                session.add(LogSettings(
+                    table_name=table_name,
+                    time_retention_minutes=time_min,
+                    count_retention_limit=count_limit
+                ))
+        await session.commit()
 
         result = await session.execute(select(Category))
         categories = result.scalars().all()
@@ -102,7 +123,7 @@ async def init_data():
                 session.add(analog)
             await session.commit()
 
-        admin_email = "administrator@gmail.com"
+        admin_email = os.getenv("ADMIN_LOGIN")
         admin_password = os.getenv("ADMIN_PASSWORD")
 
         if not admin_password:
