@@ -19,11 +19,13 @@ export const useUser = defineStore('user', () => {
 
   const login = async (registerData: registerParams, setToken: boolean = true, withReplace: boolean = true): Promise<UserItem | null> => {
     loading.value = true;
+
     try {
       const req = await loginRequest(registerData);
       if (req?.response?.data?.detail === 'Incorrect email or password') {
         throw new Error(req?.response?.data?.detail);
       }
+
       if (setToken && req?.data?.access_token) {
         localStorage.setItem('token', req?.data?.access_token);
         token.value = req?.data?.access_token;

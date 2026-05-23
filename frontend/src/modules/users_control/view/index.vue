@@ -181,14 +181,14 @@ fetchUsers();
 
   .flex-table-cell {
     // ID
-    &:first-child {
+    &:nth-child(2){
       min-width: 80px;
       width: 100%;
       max-width: 80px;
     }
 
     // Имя
-    &:nth-child(2){
+    &:nth-child(3){
       min-width: 16px + 136px + 24px;
       width: 100%;
       max-width: 150px;
@@ -196,7 +196,7 @@ fetchUsers();
     }
 
     // Фамилия
-    &:nth-child(3) {
+    &:nth-child(4) {
       min-width: 16px + 136px + 24px;
       width: 100%;
       max-width: 250px;
@@ -204,21 +204,21 @@ fetchUsers();
     }
 
     // Email
-    &:nth-child(4) {
+    &:nth-child(5) {
       min-width: 118px;
       width: 100%;
       padding-left: 0;
     }
 
     // Роль
-    &:nth-child(5) {
+    &:nth-child(6) {
       min-width: 158px;
       width: 158px;
       padding-left: 0;
     }
 
     // Статус
-    &:nth-child(6) {
+    &:nth-child(7) {
       min-width: 118px;
       width: 118px;
       padding-left: 0;

@@ -34,8 +34,10 @@
         </VFlexTableCell>
 
         <VFlexTableCell
-          v-if="showIdComputed"
-          :class="{ 'invisible': !hasAnyPermission }"
+          :class="{
+            'invisible': !hasAnyPermission,
+            'system-invisible': !showIdComputed,
+          }"
           is-columnheader
           :skeleton="skeleton"
         >
@@ -44,6 +46,7 @@
             class="flex-table__cell-skeleton"
             :class="{'flex-table__cell-skeleton--large': largeSkeleton}"
           />
+
           <template v-else>
             ID
           </template>
@@ -71,14 +74,18 @@
 
         <VFlexTableCell
           v-if="!!actionsList?.length"
-          :class="{ 'invisible': !hasAnyPermission }"
+          :class="{
+            'invisible': !hasAnyPermission,
+          }"
           is-columnheader
           :skeleton="skeleton"
         >
           <VSkeletonItem
             v-if="skeleton"
             class="flex-table__cell-skeleton"
-            :class="{'flex-table__cell-skeleton--large': largeSkeleton}"
+            :class="{
+              'flex-table__cell-skeleton--large': largeSkeleton,
+            }"
           />
           <template v-else>
             Действия
@@ -153,18 +160,22 @@
               </VFlexTableCell>
 
               <VFlexTableCell
-                v-if="showIdComputed"
-                :class="{ 'invisible': !hasAnyPermission }"
+                :class="{
+                  'invisible': !hasAnyPermission,
+                  'system-invisible': !showIdComputed,
+                }"
                 :skeleton="skeleton"
               >
                 <VSkeletonItem
                   v-if="skeleton"
                   class="flex-table__cell-skeleton"
-                  :class="{'flex-table__cell-skeleton--large': largeSkeleton}"
+                  :class="{
+                    'flex-table__cell-skeleton--large': largeSkeleton,
+                  }"
                 />
 
                 <template v-else>
-                  {{ item[itemIdKey] }}
+                  {{ item?.[itemIdKey] ?? index }}
                 </template>
               </VFlexTableCell>
 

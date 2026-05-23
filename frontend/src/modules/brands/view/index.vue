@@ -176,14 +176,14 @@ fetchBrands();
 
   .flex-table-cell {
     // ID
-    &:first-child {
+    &:nth-child(2) {
       min-width: 80px;
       width: 100%;
       max-width: 80px;
     }
 
     // Наименование
-    &:nth-child(2){
+    &:nth-child(3){
       min-width: 16px + 136px + 24px;
       width: 100%;
       max-width: 250px;
@@ -191,7 +191,7 @@ fetchBrands();
     }
 
     // Описание
-    &:nth-child(3) {
+    &:nth-child(4) {
       min-width: 128px + 24px;
       width: 100%;
       padding-left: 0;
@@ -199,7 +199,7 @@ fetchBrands();
     }
 
     // Зарегистрирован
-    &:nth-child(4) {
+    &:nth-child(5) {
       min-width: 118px;
       width: 118px;
       padding-left: 0;

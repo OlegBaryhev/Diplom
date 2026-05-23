@@ -28,12 +28,14 @@
         </template>
       </VFixedHeaderNTable>
     </div>
+
     <SidePanel
       v-if="detailedRole || isRoleBeingAdded"
       :role="detailedRole"
       :fetch-roles="fetchRoles"
       @close="detailedRole = null; isRoleBeingAdded = false"
     />
+
     <VConfirmationModal
       id="deleteRole"
       :title="`Вы действительно хотите удалить роль «${roleToDelete?.name ?? ''}»?`"
