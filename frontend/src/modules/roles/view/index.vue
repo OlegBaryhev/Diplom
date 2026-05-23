@@ -49,12 +49,11 @@
 
 <script setup lang="ts">
 import { debounce } from 'lodash';
-import { watch } from 'vue';
 import { useUser } from '@/stores/user';
-import { getRolesRequest, deleteRoleRequest } from './api';
-import type { Role } from './types';
-import TableBody from './components/TableBody.vue';
-import SidePanel from './components/SidePanel.vue';
+import { getRolesRequest, deleteRoleRequest } from '../api';
+import type { Role } from '../types';
+import TableBody from '../components/TableBody.vue';
+import SidePanel from '../components/SidePanel.vue';
 import type { ColumnHeader } from '@/common/components/VTable/types';
 
 const userStore = useUser();

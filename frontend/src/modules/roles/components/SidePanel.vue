@@ -47,14 +47,20 @@ import PermissionsEditor from './PermissionsEditor.vue';
 import { createRoleRequest, updateRoleRequest } from '../api';
 import type { Role } from '../types';
 
-const props = defineProps<{ role?: Role | null; fetchRoles: () => Promise<void> }>();
+const props = defineProps<{
+  role?: Role | null;
+  fetchRoles:() => Promise<void>;
+}>();
+
 const emit = defineEmits(['close']);
 
 const formModel = ref<Partial<Role>>(props.role ? { ...props.role } : { name: '', permissions: {} });
 const saveLoading = ref(false);
 
 const rules = {
-  name: { required: helpers.withMessage('Название обязательно', required) },
+  name: {
+    required: helpers.withMessage('Название обязательно', required),
+  },
 };
 const v$ = useVuelidate(rules, formModel);
 

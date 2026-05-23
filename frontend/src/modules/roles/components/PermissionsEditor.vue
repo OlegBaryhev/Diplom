@@ -5,21 +5,24 @@
       :key="sectionName"
       class="permission-section mb-6"
     >
-      <div class="flex items-center justify-between mb-2">
+      <div class="flex items-center gap-2 justify-between mb-2">
         <VInput
-          v-model="sectionName"
+          :model-value="sectionName"
           label="Раздел"
-          class="w-64"
-          @update:model-value="updateSectionName(sectionName, $event)"
+          class="w-full"
+          @update:model-value="(val) => updateSectionName(sectionName, val)"
         />
+
         <VBtn
+          class="min-w-max whitespace-nowrap"
           small
           outlined
           @click="removeSection(sectionName)"
         >
-          Удалить раздел
+          <span class="px-6">Удалить раздел</span>
         </VBtn>
       </div>
+
       <div class="subsection-list pl-4">
         <div
           v-for="(actions, subName) in sectionPerms"
@@ -28,10 +31,10 @@
         >
           <div class="flex items-center justify-between mb-2">
             <VInput
-              v-model="subName"
+              :model-value="subName"
               label="Подраздел"
               class="w-48"
-              @update:model-value="updateSubsectionName(sectionName, subName, $event)"
+              @update:model-value="(val) => updateSubsectionName(sectionName, subName, val)"
             />
             <VBtn
               small
@@ -70,6 +73,7 @@
 const props = defineProps<{
   modelValue: Record<string, Record<string, string[]>>;
 }>();
+
 const emit = defineEmits(['update:modelValue']);
 
 const localPermissions = ref(JSON.parse(JSON.stringify(props.modelValue || {})));
@@ -99,9 +103,9 @@ const actionLabels: Record<string, string> = {
 };
 
 watch(
-  () => localPermissions,
-  () => {
-    emit('update:modelValue', localPermissions.value);
+  localPermissions,
+  (newVal) => {
+    emit('update:modelValue', newVal);
   },
   { deep: true },
 );
@@ -116,9 +120,14 @@ const toggleAction = (
   value: boolean,
 ) => {
   if (!localPermissions.value[section]) localPermissions.value[section] = {};
-  if (!localPermissions.value[section][subsection]) localPermissions.value[section][subsection] = [];
+  if (!localPermissions.value[section][subsection]) {
+    localPermissions.value[section][subsection] = [];
+  }
+
   if (value) {
-    if (!localPermissions.value[section][subsection].includes(action)) localPermissions.value[section][subsection].push(action);
+    if (!localPermissions.value[section][subsection].includes(action)) {
+      localPermissions.value[section][subsection].push(action);
+    }
   } else {
     localPermissions.value[section][subsection] = localPermissions.value[
       section
@@ -148,8 +157,9 @@ const removeSubsection = (section: string, subsection: string) => {
 
 const updateSectionName = (oldName: string, newName: string) => {
   if (oldName === newName) return;
-  localPermissions.value[newName] = localPermissions.value[oldName];
+  const data = localPermissions.value[oldName];
   delete localPermissions.value[oldName];
+  localPermissions.value[newName] = data;
 };
 
 const updateSubsectionName = (
@@ -158,7 +168,8 @@ const updateSubsectionName = (
   newSub: string,
 ) => {
   if (oldSub === newSub) return;
-  localPermissions.value[section][newSub] = localPermissions.value[section][oldSub];
+  const data = localPermissions.value[section][oldSub];
   delete localPermissions.value[section][oldSub];
+  localPermissions.value[section][newSub] = data;
 };
 </script>

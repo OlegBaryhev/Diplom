@@ -100,7 +100,7 @@ export const VERTICAL_MENU: RouteMenu[] = [
   {
     id: 10,
     name: 'Роли',
-    svg_name: 'users',
+    svg_name: 'edit',
     routeName: 'roles',
   },
 ].filter(Boolean) as RouteMenu[];

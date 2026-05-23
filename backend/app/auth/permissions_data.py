@@ -14,6 +14,7 @@ SUPERUSER_PERMISSIONS = {
     "more": {"all_subsections": ["read"]},
     "categories": {"all_subsections": ["read", "write", "edit", "delete"]},
     "brands": {"all_subsections": ["read", "write", "edit", "delete"]},
+    "roles": {"all_subsections": ["read", "write", "edit", "delete"]},
 } | LOGS
 
 MODERATOR_PERMISSIONS = {
