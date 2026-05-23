@@ -2,7 +2,6 @@
   <div class="main-layout flex justify-start min-h-screen min-w-[1024px] relative">
     <VSideBar
       :blured-style="isHomeRoute"
-      @click="console.log(isHomeRoute)"
     />
     <div class="main-layout__wrapper flex items-start flex-col min-h-full w-full min-w-max">
       <RouterView />

@@ -1,40 +1,62 @@
+import { unref } from 'vue';
 import type { RouteRecordRaw } from 'vue-router';
 import type { RouteMenu } from '@/common/types/menu';
-import { USER_ROLE_LIST } from '@/consts/user-role-list';
 import { useUser } from '@/stores/user';
 import type { Permissions } from '../types/permissions';
 
-export const userHasRouteAccess = (routeAccess: RouteMenu | RouteRecordRaw): boolean => {
+export const userHasRouteAccess = (routeAccess: RouteMenu | RouteRecordRaw, parentRouteName?: string): boolean => {
   const userStore = useUser();
+  const user = unref(userStore.user);
+  if (!user) return false;
 
-  const routeName = routeAccess.routeName || routeAccess.name;
-  const { path } = routeAccess;
+  const { permissions } = user;
+  if (!permissions) return false;
 
-  const [section, subSection] = (path?.split('/')?.slice(1, 3) || routeName?.split('/')?.slice(0, 2) || []);
+  const { routeName, name, path } = routeAccess;
+  const effectiveRouteName = routeName || name;
 
-  const rolePermissions = USER_ROLE_LIST?.find(
-    ({ value }) => value === userStore.user?.role,
-  )?.accessRoutesWithPermissions;
+  if (effectiveRouteName && permissions[effectiveRouteName]?.all_subsections) return true;
+  if (parentRouteName && permissions[parentRouteName]?.[effectiveRouteName as string]) return true;
 
-  return !!(
-    rolePermissions?.[routeName]
-    || rolePermissions?.[section]?.[subSection]
-    || rolePermissions?.[section]?.allSubsections
-  );
+  const routePath = path?.split('/').filter(Boolean) || [];
+  let section = '';
+  let subSection = '';
+
+  if (routePath.length >= 2) {
+    [section, subSection] = routePath;
+  } else if (effectiveRouteName && typeof effectiveRouteName === 'string' && effectiveRouteName.includes('/')) {
+    const parts = effectiveRouteName.split('/');
+    [section, subSection] = parts;
+  } else {
+    const [, first, second] = path?.split('/') || [];
+    section = first;
+    subSection = second;
+  }
+
+  if (!section) return false;
+  const sectionPerms = permissions[section];
+  if (!sectionPerms) return false;
+  if (sectionPerms.all_subsections) return true;
+  if (subSection && sectionPerms[subSection]) return true;
+  return false;
 };
 
 export const userHasPermission = (action: Permissions): boolean => {
   const userStore = useUser();
-  const [section, subSection] = (window.location.pathname?.split('/')?.slice(1, 3) || []);
+  const user = unref(userStore.user);
+  if (!user) return false;
 
-  if (!section && !subSection) return false;
+  const { permissions } = user;
+  if (!permissions) return false;
 
-  const rolePermissions = USER_ROLE_LIST?.find(
-    ({ value }) => value === userStore.user?.role,
-  )?.accessRoutesWithPermissions;
+  const { pathname } = window.location;
+  const [, section, subSection] = pathname.split('/');
+  if (!section) return false;
 
-  const curentSectionRolePermissions = rolePermissions?.[section];
+  const sectionPerms = permissions[section];
+  if (!sectionPerms) return false;
 
-  return !!curentSectionRolePermissions?.[subSection]?.includes(action)
-    || !!curentSectionRolePermissions?.allSubsections?.includes(action);
+  if (sectionPerms.all_subsections?.includes(action)) return true;
+  if (subSection && sectionPerms[subSection]?.includes(action)) return true;
+  return false;
 };

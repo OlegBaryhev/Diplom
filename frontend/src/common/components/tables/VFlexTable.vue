@@ -12,8 +12,10 @@
     >
       <VFlexTableRow :row-height="headerRowHeight">
         <VFlexTableCell
-          v-if="itemChecking"
-          :class="{ 'invisible': !hasAnyPermission }"
+          :class="{
+            'invisible': !hasAnyPermission,
+            'system-invisible': !itemChecking,
+          }"
           is-columnheader
           :skeleton="skeleton"
         >
@@ -32,8 +34,10 @@
         </VFlexTableCell>
 
         <VFlexTableCell
-          v-if="showIdComputed"
-          :class="{ 'invisible': !hasAnyPermission }"
+          :class="{
+            'invisible': !hasAnyPermission,
+            'system-invisible': !showIdComputed,
+          }"
           is-columnheader
           :skeleton="skeleton"
         >
@@ -42,6 +46,7 @@
             class="flex-table__cell-skeleton"
             :class="{'flex-table__cell-skeleton--large': largeSkeleton}"
           />
+
           <template v-else>
             ID
           </template>
@@ -69,14 +74,18 @@
 
         <VFlexTableCell
           v-if="!!actionsList?.length"
-          :class="{ 'invisible': !hasAnyPermission }"
+          :class="{
+            'invisible': !hasAnyPermission,
+          }"
           is-columnheader
           :skeleton="skeleton"
         >
           <VSkeletonItem
             v-if="skeleton"
             class="flex-table__cell-skeleton"
-            :class="{'flex-table__cell-skeleton--large': largeSkeleton}"
+            :class="{
+              'flex-table__cell-skeleton--large': largeSkeleton,
+            }"
           />
           <template v-else>
             Действия
@@ -126,8 +135,10 @@
               @animationend="onAnimationEnd"
             >
               <VFlexTableCell
-                v-if="itemChecking"
-                :class="{ 'invisible': !hasAnyPermission }"
+                :class="{
+                  'invisible': !hasAnyPermission,
+                  'system-invisible': !itemChecking,
+                }"
                 :skeleton="skeleton"
                 @click.stop
                 @click.self.prevent
@@ -149,18 +160,22 @@
               </VFlexTableCell>
 
               <VFlexTableCell
-                v-if="showIdComputed"
-                :class="{ 'invisible': !hasAnyPermission }"
+                :class="{
+                  'invisible': !hasAnyPermission,
+                  'system-invisible': !showIdComputed,
+                }"
                 :skeleton="skeleton"
               >
                 <VSkeletonItem
                   v-if="skeleton"
                   class="flex-table__cell-skeleton"
-                  :class="{'flex-table__cell-skeleton--large': largeSkeleton}"
+                  :class="{
+                    'flex-table__cell-skeleton--large': largeSkeleton,
+                  }"
                 />
 
                 <template v-else>
-                  {{ item[itemIdKey] }}
+                  {{ item?.[itemIdKey] ?? index }}
                 </template>
               </VFlexTableCell>
 
@@ -275,7 +290,10 @@ const props = withDefaults(defineProps<{
   actionsList: [],
 });
 
-const showIdComputed = computed(() => props?.showId && (userHasPermission(Permissions.Write) || userHasPermission(Permissions.Edit) || userHasPermission(Permissions.Delete)));
+const showIdComputed = computed(() => props?.showId
+  && (userHasPermission(Permissions.Write)
+  || userHasPermission(Permissions.Edit)
+  || userHasPermission(Permissions.Delete)));
 
 // eslint-disable-next-line func-call-spacing, no-spaced-func
 const emit = defineEmits<{
@@ -429,6 +447,13 @@ $tile-bg: #cfcfdf;
   50% {
     background: theme('colors.main.200');
   }
+}
+.system-invisible {
+  @apply invisible;
+  width: 0 !important;
+  max-width: 0 !important;
+  min-width: 0 !important;
+  padding: 0 !important;
 }
 
 .flex-table {

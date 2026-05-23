@@ -1,20 +1,70 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, status, Form, UploadFile, File
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import selectinload
 from app.database import get_session
-from app.models.user import User, UserRole
+from app.models.user import User
+from app.models.roles import Role
+from app.schemas.user import UserRead, UserLogin
+from app.auth.security import verify_password, create_access_token, get_password_hash
 from app.auth.dependencies import get_current_user
-from app.schemas.user import UserRead
-from app.auth.security import get_password_hash, verify_password, create_access_token
-from pydantic import BaseModel, EmailStr
-import shutil
-import os
 import uuid
+import os
+import shutil
 
 router = APIRouter()
 
-@router.post("/register", response_model=UserRead)
+@router.post("/token")
+async def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    session: AsyncSession = Depends(get_session)
+):
+    result = await session.execute(
+        select(User).where(User.email == form_data.username).options(selectinload(User.role_obj))
+    )
+    user = result.scalar_one_or_none()
+    if not user or not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+        )
+    access_token = create_access_token(data={"sub": str(user.id)})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@router.post("/login")
+async def login_json(login_data: UserLogin, session: AsyncSession = Depends(get_session)):
+    result = await session.execute(
+        select(User).where(User.email == login_data.email).options(selectinload(User.role_obj))
+    )
+    user = result.scalar_one_or_none()
+    if not user or not verify_password(login_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+        )
+    access_token = create_access_token(data={"sub": str(user.id)})
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer"
+    }
+
+@router.get("/me", response_model=UserRead)
+async def read_users_me(current_user: User = Depends(get_current_user)):
+    permissions = current_user.role_obj.permissions if current_user.role_obj else None
+    user_data = UserRead(
+        id=current_user.id,
+        email=current_user.email,
+        name=current_user.name,
+        surname=current_user.surname,
+        avatar_url=current_user.avatar_url,
+        is_active=current_user.is_active,
+        role_id=current_user.role_id,
+        permissions=permissions,
+    )
+    return user_data
+
+@router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 async def register(
     email: str = Form(...),
     name: str = Form(...),
@@ -27,13 +77,15 @@ async def register(
     existing_user = result.scalar_one_or_none()
     if existing_user:
         raise HTTPException(status_code=400, detail="User with this email already exists")
-
-    new_role = UserRole.guest
+    guest_role_result = await session.execute(select(Role).where(Role.name == "guest"))
+    guest_role = guest_role_result.scalar_one_or_none()
+    if not guest_role:
+        raise HTTPException(status_code=500, detail="Guest role not found in database")
 
     hashed_password = get_password_hash(password)
     avatar_url = None
     if avatar:
-        file_extension = avatar.filename.split(".")[-1]
+        file_extension = avatar.filename.split(".")[-1] if avatar.filename else "png"
         unique_filename = f"{uuid.uuid4()}.{file_extension}"
         avatar_path = os.path.join("avatars", unique_filename)
         os.makedirs("avatars", exist_ok=True)
@@ -46,53 +98,11 @@ async def register(
         name=name,
         surname=surname,
         hashed_password=hashed_password,
-        role=new_role,
-        avatar_url=avatar_url
+        role_id=guest_role.id,
+        avatar_url=avatar_url,
+        is_active=1
     )
     session.add(db_user)
     await session.commit()
     await session.refresh(db_user)
     return db_user
-
-
-@router.post("/token")
-async def login(form_data: OAuth2PasswordRequestForm = Depends(), session: AsyncSession = Depends(get_session)):
-    result = await session.execute(select(User).where(User.email == form_data.username))
-    user = result.scalar_one_or_none()
-    if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(status_code=400, detail="Incorrect email or password")
-    access_token = create_access_token(data={"sub": str(user.id)})
-    return {"access_token": access_token, "token_type": "bearer"}
-
-
-@router.get("/me", response_model=UserRead)
-async def me(current_user: User = Depends(get_current_user)):
-    return current_user
-
-class UserEditRequest(BaseModel):
-    name: str
-    surname: str
-    email: EmailStr
-
-@router.put("/edit", response_model=UserRead)
-async def edit_user(
-    user_edit: UserEditRequest,
-    current_user: User = Depends(get_current_user),
-    session: AsyncSession = Depends(get_session)
-):
-    # Проверка, не занят ли новый email
-    if user_edit.email != current_user.email:
-        result = await session.execute(select(User).where(User.email == user_edit.email))
-        user_with_email = result.scalar_one_or_none()
-        if user_with_email:
-            raise HTTPException(status_code=400, detail="User with this email already exists")
-
-    # Обновление полей
-    current_user.name = user_edit.name
-    current_user.surname = user_edit.surname
-    current_user.email = user_edit.email
-
-    session.add(current_user)
-    await session.commit()
-    await session.refresh(current_user)
-    return current_user

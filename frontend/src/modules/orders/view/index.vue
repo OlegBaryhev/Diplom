@@ -244,20 +244,20 @@ fetchOrders();
 
   .flex-table-cell {
     // ID
-    &:first-child {
+    &:nth-child(2) {
       min-width: 80px;
       width: 100%;
       max-width: 80px;
     }
 
     // Код-заказа
-    &:nth-child(2){
+    &:nth-child(3) {
       min-width: 100px;
       max-width: 100px;
     }
 
     // Пользователь
-    &:nth-child(3) {
+    &:nth-child(4) {
       min-width: 128px + 24px;
       width: 100%;
       padding-left: 24px;
@@ -265,25 +265,25 @@ fetchOrders();
     }
 
     // Кол-во позиций продуктов
-    &:nth-child(4) {
-      min-width: 140px;
-      max-width: 200px;
-    }
-
-    // Кол-во продуктов
     &:nth-child(5) {
       min-width: 140px;
       max-width: 200px;
     }
 
-    // Статус
+    // Кол-во продуктов
     &:nth-child(6) {
       min-width: 140px;
       max-width: 200px;
     }
 
-    // Дата
+    // Статус
     &:nth-child(7) {
+      min-width: 140px;
+      max-width: 200px;
+    }
+
+    // Дата
+    &:nth-child(8) {
       min-width: 150px;
       max-width: 150px;
     }

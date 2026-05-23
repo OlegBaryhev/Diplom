@@ -138,14 +138,14 @@ fetchRecalculateHistorys();
 
   .flex-table-cell {
     // ID
-    &:first-child {
+    &:nth-child(2) {
       min-width: 80px;
       width: 100%;
       max-width: 80px;
     }
 
     // Наименование
-    &:nth-child(2){
+    &:nth-child(3) {
       min-width: 16px + 136px + 24px;
       width: 100%;
       max-width: 250px;
@@ -153,7 +153,7 @@ fetchRecalculateHistorys();
     }
 
     // Описание
-    &:nth-child(3) {
+    &:nth-child(4) {
       min-width: 128px + 24px;
       width: 100%;
       padding-left: 0;
@@ -161,7 +161,7 @@ fetchRecalculateHistorys();
     }
 
     // Категория
-    &:nth-child(4) {
+    &:nth-child(5) {
       min-width: 56px + 24px;
       width: 100%;
       max-width: 200px;
@@ -170,7 +170,7 @@ fetchRecalculateHistorys();
     }
 
     // Бренд
-    &:nth-child(5) {
+    &:nth-child(6) {
       min-width: 184px + 24px;
       width: 184px + 24px;
       padding-left: 0;
@@ -178,7 +178,7 @@ fetchRecalculateHistorys();
     }
 
     // Цена
-    &:nth-child(6) {
+    &:nth-child(7) {
       min-width: 120px;
       width: 100%;
       max-width: 120px;
@@ -186,7 +186,7 @@ fetchRecalculateHistorys();
       padding-right: 12px;
     }
     // Действия
-    &:nth-child(7) {
+    &:nth-child(8) {
       min-width: 100px;
       width: 100%;
       max-width: 100px;

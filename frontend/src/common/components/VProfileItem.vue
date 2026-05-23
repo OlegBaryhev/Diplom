@@ -21,8 +21,8 @@
       v-if="isOpen"
       class="profile__text w-full flex flex-col cursor-pointer"
     >
-      <span class="profile-item__username min-h-[1em]">{{ `${profileData?.name}${profileData?.surname ? ' ' + profileData?.surname: ''}` || 'Пользователь' }}</span>
-      <span class="profile-item__role text-main-300">{{ profileData?.role ? 'Администратор' : ( profileData?.role ?? 'Гость') }}</span>
+      <span class="profile-item__username overflow-hidden whitespace-nowrap min-h-[1em]">{{ `${profileData?.name}${profileData?.surname ? ' ' + profileData?.surname: ''}` || 'Пользователь' }}</span>
+      <span class="profile-item__role overflow-hidden whitespace-nowrap text-main-300">{{ profileData?.role ? 'Администратор' : ( profileData?.role ?? 'Гость') }}</span>
     </div>
   </div>
 </template>

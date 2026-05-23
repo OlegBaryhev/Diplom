@@ -139,7 +139,7 @@ const register = async (): Promise<void> => {
 
     await userStore.login(form);
   } catch (error) {
-    console.error(error.message);
+    console.log(error.message);
 
     if (error.message === 'Incorrect email or password') {
       errorMessage.value = 'Не верный Email или пароль';

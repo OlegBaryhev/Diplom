@@ -1,5 +1,41 @@
 import type { RouteMenu } from '@/common/typesnu';
 
+export const LOGS_PAGES_MENU: RouteMenu[] = [
+  {
+    id: 11,
+    name: 'Логи',
+    svg_name: 'db',
+    routeName: 'logs',
+    submenu: [
+      {
+        id: 12,
+        name: 'Логи таблицы "Бренды"',
+        routeName: 'brand_log',
+      },
+      {
+        id: 13,
+        name: 'Логи таблицы "Продукты"',
+        routeName: 'product_log',
+      },
+      {
+        id: 14,
+        name: 'Логи таблицы "Категории"',
+        routeName: 'category_log',
+      },
+      {
+        id: 15,
+        name: 'Логи таблицы "Заказы"',
+        routeName: 'order_log',
+      },
+      {
+        id: 16,
+        name: 'Логи таблицы "Пользователи"',
+        routeName: 'user_log',
+      },
+    ],
+  },
+];
+
 export const VERTICAL_MENU: RouteMenu[] = [
   {
     id: 0,
@@ -61,7 +97,15 @@ export const VERTICAL_MENU: RouteMenu[] = [
     svg_name: 'users',
     routeName: 'users_control',
   },
+  {
+    id: 10,
+    name: 'Роли',
+    svg_name: 'edit',
+    routeName: 'roles',
+  },
 ].filter(Boolean) as RouteMenu[];
+
+export const UNITED_VERTICAL_MENU = [...VERTICAL_MENU, ...LOGS_PAGES_MENU];
 
 export const VERTICAL_MENU_BOTTOM: RouteMenu[] = [
   {

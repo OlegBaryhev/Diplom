@@ -86,14 +86,14 @@ fetchCarts();
 
   .flex-table-cell {
     // ID
-    &:first-child {
+    &:nth-child(2) {
       min-width: 80px;
       width: 100%;
       max-width: 80px;
     }
 
     // Пользователь
-    &:nth-child(2){
+    &:nth-child(3){
       min-width: 128px + 24px;
       width: 100%;
       padding-left: 0;
@@ -101,7 +101,7 @@ fetchCarts();
     }
 
     // Всего типов товаров
-    &:nth-child(3) {
+    &:nth-child(4) {
       min-width: 16px + 236px + 24px;
       width: 100%;
       max-width: 250px;
@@ -109,7 +109,7 @@ fetchCarts();
     }
 
     // Количество товара
-    &:nth-child(4) {
+    &:nth-child(5) {
       min-width: 16px + 136px + 24px;
       width: 100%;
       max-width: 250px;
@@ -117,7 +117,7 @@ fetchCarts();
     }
 
     // Цена целиком
-    &:nth-child(5) {
+    &:nth-child(6) {
       min-width: 16px + 136px + 24px;
       width: 100%;
       max-width: 250px;

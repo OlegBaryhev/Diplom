@@ -3,6 +3,7 @@ import { useUser } from '@/stores/user';
 import { DEFAULT_TITLE } from '@/consts';
 import ErrorPage from '@/modules/errors/views/errors.vue';
 import { userHasRouteAccess } from '@/common/utils/permissions';
+import { LOGS_PAGES } from '@/modules/_logs/routes';
 
 const routes = [
   {
@@ -10,6 +11,7 @@ const routes = [
     component: () => import('../layouts/Main.vue'),
     redirect: 'home',
     children: [
+      ...LOGS_PAGES,
       {
         path: '/home',
         name: 'home',
@@ -28,6 +30,20 @@ const routes = [
         component: () => import('../modules/products/view/index.vue'),
         meta: {
           title: 'Продукты - Система ценообразования "Doge Devices"',
+          breadcrumb: [{
+            to: '',
+            text: 'Главная',
+          }],
+        },
+      },
+      {
+        path: '/roles',
+        name: 'roles',
+        component: () => import('../modules/roles/view/index.vue'),
+        meta: {
+          title: 'Роли - Система ценообразования "Doge Devices"',
+          requiresAuth: true,
+          requiresSuperuser: true,
           breadcrumb: [{
             to: '',
             text: 'Главная',
@@ -133,10 +149,12 @@ const routes = [
       },
     ],
   },
+
   {
     path: '/',
     redirect: '/home',
   },
+
   {
     name: 'AuthLayout',
     component: () => import('../layouts/Auth.vue'),
@@ -213,51 +231,35 @@ router.beforeEach(async (to, from, next): Promise<void> => {
 
   if (to.query.token && typeof to.query.token === 'string') {
     localStorage.setItem('token', to.query.token);
-
     if (to.name === 'login' || to.name === 'register') {
       return next({ name: 'home' });
     }
-
     return next({ name: to.name });
   }
 
   const userStore = useUser();
+  const { token } = userStore;
 
-  if (!userStore?.token && to.name !== 'login' && to.name !== 'register') {
+  if (!token && to.name !== 'login' && to.name !== 'register') {
     return next({ name: 'login' });
   }
 
-  if (userStore?.token && !userStore.user) {
-    await userStore?.getUser();
+  if (token && !userStore.user) {
+    await userStore.getUser();
   }
 
-  const { user } = userStore;
+  const currentUser = unref(userStore.user);
 
-  if (userStore?.token && (to.name === 'login' || to.name === 'register')) {
+  if (token && (to.name === 'login' || to.name === 'register')) {
     return next({ name: 'home' });
   }
 
-  if (user && !userHasRouteAccess({ name: to.name as string, path: to.path } as RouteRecordRaw) && to.name !== '404') {
+  if (currentUser && !userHasRouteAccess({ name: to.name as string, path: to.path } as RouteRecordRaw) && to.name !== '404') {
+    console.warn('Access denied to', to.name, 'for user', currentUser.email);
     return next({ name: '404' });
   }
 
   next();
-});
-
-router.onError((error, to) => {
-  console.error('router.onError', error);
-
-  if (
-    error.message.includes('Failed to fetch dynamically imported module')
-    || error.message.includes('Failed to load module script')
-    || error.message.includes('error loading dynamically imported module')
-  ) {
-    // if (!to?.fullPath) {
-    //   window.location.reload();
-    // } else {
-    //   (window as Window).location = to.fullPath;
-    // }
-  }
 });
 
 export default router;

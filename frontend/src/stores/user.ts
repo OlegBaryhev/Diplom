@@ -9,12 +9,12 @@ export const useUser = defineStore('user', () => {
   const token = ref(localStorage.getItem('token') || null);
   const storeRouter = useStoreRouter();
   const { replace } = storeRouter.router;
-  const loading = ref<boolean>();
+  const loading = ref(false);
 
   const getUser = async (): Promise<UserItem | null> => {
     const { data: myselfData } = await fetchMyself();
     user.value = myselfData;
-    return Promise.resolve(user.value);
+    return user.value;
   };
 
   const login = async (registerData: registerParams, setToken: boolean = true, withReplace: boolean = true): Promise<UserItem | null> => {
@@ -25,11 +25,12 @@ export const useUser = defineStore('user', () => {
       if (req?.response?.data?.detail === 'Incorrect email or password') {
         throw new Error(req?.response?.data?.detail);
       }
+
       if (setToken && req?.data?.access_token) {
         localStorage.setItem('token', req?.data?.access_token);
         token.value = req?.data?.access_token;
         await getUser();
-        withReplace && await replace({ name: 'home' });
+        if (withReplace) await replace({ name: 'home' });
       }
     } catch (e) {
       console.error(e);
@@ -37,8 +38,7 @@ export const useUser = defineStore('user', () => {
     } finally {
       loading.value = false;
     }
-
-    return Promise.resolve(user.value);
+    return user.value;
   };
 
   const resetUser = () => {
@@ -49,7 +49,6 @@ export const useUser = defineStore('user', () => {
 
   const logout = async (): Promise<void> => {
     resetUser();
-
     await replace({ name: 'register' });
   };
 

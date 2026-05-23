@@ -17,4 +17,5 @@ export interface UserItem extends UserBase {
 
   created_at?: string;
   updated_by?: string;
+  permissions?: Record<string, { allSubsections?: string[]; [key: string]: any }>;
 }
