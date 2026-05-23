@@ -3,6 +3,7 @@ import { useUser } from '@/stores/user';
 import { DEFAULT_TITLE } from '@/consts';
 import ErrorPage from '@/modules/errors/views/errors.vue';
 import { userHasRouteAccess } from '@/common/utils/permissions';
+import { LOGS_PAGES } from '@/modules/_logs/routes';
 
 const routes = [
   {
@@ -10,6 +11,7 @@ const routes = [
     component: () => import('../layouts/Main.vue'),
     redirect: 'home',
     children: [
+      ...LOGS_PAGES,
       {
         path: '/home',
         name: 'home',
@@ -147,10 +149,12 @@ const routes = [
       },
     ],
   },
+
   {
     path: '/',
     redirect: '/home',
   },
+
   {
     name: 'AuthLayout',
     component: () => import('../layouts/Auth.vue'),

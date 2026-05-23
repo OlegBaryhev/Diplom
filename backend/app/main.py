@@ -12,7 +12,7 @@ import asyncio
 import logging
 
 app = FastAPI(
-    title="Course API",
+    title="Diplom API",
     description="API for products",
     version="0.1.0"
 )

@@ -1,3 +1,7 @@
+LOGS = {
+    "logs": {"all_subsections": ["read", "delete"]},
+}
+
 SUPERUSER_PERMISSIONS = {
     "home": {"all_subsections": ["read"]},
     "products": {"all_subsections": ["read", "write", "edit", "delete", "buy", "download", "recalculate"]},
@@ -10,7 +14,7 @@ SUPERUSER_PERMISSIONS = {
     "more": {"all_subsections": ["read"]},
     "categories": {"all_subsections": ["read", "write", "edit", "delete"]},
     "brands": {"all_subsections": ["read", "write", "edit", "delete"]},
-}
+} | LOGS
 
 MODERATOR_PERMISSIONS = {
     "home": {"all_subsections": ["read"]},
