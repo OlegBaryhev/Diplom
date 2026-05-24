@@ -1,19 +1,26 @@
 <template>
   <section class="profile flex flex-col gap-4 min-h-[100vh] w-full p-6">
     <article class="profile__main w-full h-[200px]">
-      <div class="profile__background w-full"></div>
+      <div class="profile__background w-full" />
       <div class="profile__main-content h-[40%] px-3">
         <div
-          class="profile__image
-          rounded-[100%] absolute
-          flex items-center justify-center "
+          class="profile__image rounded-[100%] absolute flex items-center justify-center cursor-pointer"
+          @click="openAvatarEditor"
         >
+          <img
+            v-if="profileData?.avatar_url"
+            :src="profileData.avatar_url"
+            class="w-full h-full rounded-full object-cover"
+            alt="avatar"
+          />
+
           <VIcon
-            v-if="!profileData?.avatar_url"
+            v-else
             class="profile__icon"
             name="plus"
           />
         </div>
+
         <div class="profile__content h-full flex justify-between items-center">
           <div class="profile__info h-full flex items-center">
             <div class="flex flex-col">
@@ -61,6 +68,12 @@
     confirmation-text="Выйти"
     @confirm="exitFromUser()"
   />
+
+  <AvatarEditorModal
+    :modal-id="AVATAR_MODAL_ID"
+    :current-avatar-url="profileData?.avatar_url"
+    @saved="onAvatarSaved"
+  />
 </template>
 
 <script lang="ts" setup>
@@ -69,15 +82,29 @@ import { Permissions } from '@/common/types/permissions';
 import { useUser } from '@/stores/user';
 import EditUserModel from '@/modules/profile/components/EditUserModel.vue';
 import { useModals } from '@/stores/modals';
+import AvatarEditorModal from '../components/AvatarEditorModal.vue';
 
 const userStore = useUser();
 const modalStore = useModals();
 
 const EDIT_USER_MODAL_ID = 'edit-user-modal-id';
+const AVATAR_MODAL_ID = 'avatar-editor-modal';
 
 const profileData = computed(() => userStore?.user);
+const saveChangesLoading = ref(false);
 
 const exitFromUser = (): void => userStore.logout();
+
+const openAvatarEditor = () => {
+  modalStore.open(AVATAR_MODAL_ID);
+};
+
+const onAvatarSaved = async (newUrl: string) => {
+  if (profileData.value) {
+    profileData.value.avatar_url = newUrl;
+    await userStore.refreshUser();
+  }
+};
 </script>
 
 <style lang="scss">

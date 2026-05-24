@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
+from fastapi.staticfiles import StaticFiles
 from app.routes import products, category, cart, order, auth_routes, brand, user, analogs, recalculate, recalculate_history, roles
 from app.routes.logs import router as logs_router
 from app.database import create_tables, init_logs
@@ -10,6 +11,7 @@ from app.init_data import init_data
 from app.core.log_cleanup import start_log_cleanup_scheduler
 import asyncio
 import logging
+import os
 
 app = FastAPI(
     title="Diplom API",
@@ -42,6 +44,9 @@ app.include_router(recalculate.router, prefix="/recalculate", tags=["Recalculate
 app.include_router(recalculate_history.router, prefix="/recalculate_history", tags=["RecalculateHistory"])
 app.include_router(roles.router, prefix="/roles", tags=["Roles"])
 app.include_router(logs_router, prefix="/logs", tags=["Logs"])
+
+os.makedirs("avatars", exist_ok=True)
+app.mount("/avatars", StaticFiles(directory="avatars"), name="avatars")
 
 logger = logging.getLogger("uvicorn.error")
 

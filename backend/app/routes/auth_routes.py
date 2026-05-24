@@ -106,3 +106,30 @@ async def register(
     await session.commit()
     await session.refresh(db_user)
     return db_user
+
+@router.post("/upload-avatar")
+async def upload_avatar(
+    avatar: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session)
+):
+    if not avatar.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Файл должен быть изображением")
+
+    ext = avatar.filename.split(".")[-1].lower()
+    if ext not in ["jpg", "jpeg", "png", "webp"]:
+        ext = "png"
+    filename = f"{uuid.uuid4()}.{ext}"
+    file_path = os.path.join("avatars", filename)
+    os.makedirs("avatars", exist_ok=True)
+
+    contents = await avatar.read()
+    with open(file_path, "wb") as f:
+        f.write(contents)
+    
+    avatar_url = f"/avatars/{filename}"
+    current_user.avatar_url = avatar_url
+    session.add(current_user)
+    await session.commit()
+    
+    return {"avatar_url": avatar_url}
