@@ -4,7 +4,7 @@ export const LOGS_PAGES_MENU: RouteMenu[] = [
   {
     id: 11,
     name: 'Логи',
-    svg_name: 'db',
+    svg_name: 'archive',
     routeName: 'logs',
     submenu: [
       {
