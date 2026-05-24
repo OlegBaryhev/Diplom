@@ -4,7 +4,14 @@
       :blured-style="isHomeRoute"
     />
     <div class="main-layout__wrapper flex items-start flex-col min-h-full w-full min-w-max">
-      <RouterView />
+      <RouterView v-slot="{ Component }">
+        <Transition
+          name="fade"
+          mode="out-in"
+        >
+          <Component :is="Component" />
+        </Transition>
+      </RouterView>
     </div>
   </div>
 </template>
