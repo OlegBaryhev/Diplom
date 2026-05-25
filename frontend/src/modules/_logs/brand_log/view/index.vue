@@ -36,7 +36,6 @@ import { watch } from 'vue';
 import {
   getBrandsRequest,
   exportBrandsRequest,
-  deleteBrandsRequest,
 } from '../api';
 
 import type { Brand } from '../types';

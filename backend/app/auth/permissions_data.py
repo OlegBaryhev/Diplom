@@ -1,5 +1,10 @@
 LOGS = {
     "logs": {"all_subsections": ["read", "delete"]},
+    "brand_log": {"all_subsections": ["read", "delete"]},
+    "category_log": {"all_subsections": ["read", "delete"]},
+    "order_log": {"all_subsections": ["read", "delete"]},
+    "product_log": {"all_subsections": ["read", "delete"]},
+    "user_log": {"all_subsections": ["read", "delete"]},
 }
 
 SUPERUSER_PERMISSIONS = {

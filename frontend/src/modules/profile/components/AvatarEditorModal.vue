@@ -19,7 +19,7 @@
               @pointercancel="stopDrag"
               @pointerleave="stopDrag"
               @wheel="handleWheel"
-            ></canvas>
+            />
           </div>
         </div>
 
@@ -49,7 +49,7 @@
             />
           </div>
 
-          <p class="text-xs select-none text-additional-200 text-center">
+          <p class="text-xs select-none text-additional-300 text-center">
             Перемещайте изображение мышью, масштабируйте колёсиком
           </p>
         </div>
@@ -213,6 +213,12 @@ const drawImage = () => {
   ctx.stroke();
 };
 
+const renderCanvas = () => {
+  requestAnimationFrame(() => {
+    drawImage();
+  });
+};
+
 const fitImageToCircle = () => {
   if (!imgElement) return;
 
@@ -225,12 +231,13 @@ const fitImageToCircle = () => {
   offsetX.value = 0;
   offsetY.value = 0;
   imgLoaded.value = true;
-  drawImage();
+  renderCanvas();
 };
 
 const loadImage = (url: string) => {
   imageSelected.value = true;
   imgLoaded.value = false;
+  renderCanvas();
 
   const img = new Image();
   img.crossOrigin = 'anonymous';
@@ -251,7 +258,7 @@ const resetState = () => {
   zoom.value = 1;
   isDragging = false;
   dragPointerId = null;
-  drawPlaceholder();
+  renderCanvas();
 };
 
 const closeModal = () => {
@@ -406,14 +413,14 @@ watch(
     if (url) {
       loadImage(url);
     } else {
-      drawPlaceholder();
+      renderCanvas();
     }
   },
   { immediate: true },
 );
 
 onMounted(() => {
-  drawPlaceholder();
+  renderCanvas();
 });
 
 onBeforeUnmount(() => {

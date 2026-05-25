@@ -1,10 +1,26 @@
 export const LOGS_PAGES = [
   {
+    path: '/logs',
+    name: 'logs',
+    component: () => import('./_logs_settings/view/index.vue'),
+    meta: {
+      title: 'Логи - Система ценообразования "Doge Devices"',
+      breadcrumb: [{
+        to: '',
+        text: 'Главная',
+      },
+      {
+        to: 'logs',
+        text: 'Логи',
+      }],
+    },
+  },
+  {
     path: '/brand_log',
     name: 'brand_log',
     component: () => import('./brand_log/view/index.vue'),
     meta: {
-      title: 'Логи - Система ценообразования "Doge Devices"',
+      title: 'Логи таблицы "Бренды" - Система ценообразования "Doge Devices"',
       breadcrumb: [{
         to: '',
         text: 'Главная',
@@ -20,7 +36,7 @@ export const LOGS_PAGES = [
     name: 'category_log',
     component: () => import('./category_log/view/index.vue'),
     meta: {
-      title: 'Логи - Система ценообразования "Doge Devices"',
+      title: 'Логи таблицы "Категории" - Система ценообразования "Doge Devices"',
       breadcrumb: [{
         to: '',
         text: 'Главная',
@@ -36,7 +52,7 @@ export const LOGS_PAGES = [
     name: 'order_log',
     component: () => import('./order_log/view/index.vue'),
     meta: {
-      title: 'Логи - Система ценообразования "Doge Devices"',
+      title: 'Логи таблицы "Заказы" - Система ценообразования "Doge Devices"',
       breadcrumb: [{
         to: '',
         text: 'Главная',
@@ -52,7 +68,7 @@ export const LOGS_PAGES = [
     name: 'product_log',
     component: () => import('./product_log/view/index.vue'),
     meta: {
-      title: 'Логи - Система ценообразования "Doge Devices"',
+      title: 'Логи таблицы "Продукты" - Система ценообразования "Doge Devices"',
       breadcrumb: [{
         to: '',
         text: 'Главная',
@@ -68,7 +84,7 @@ export const LOGS_PAGES = [
     name: 'user_log',
     component: () => import('./user_log/view/index.vue'),
     meta: {
-      title: 'Логи - Система ценообразования "Doge Devices"',
+      title: 'Логи таблицы "Пользователи" - Система ценообразования "Doge Devices"',
       breadcrumb: [{
         to: '',
         text: 'Главная',

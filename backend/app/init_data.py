@@ -91,7 +91,7 @@ async def init_data():
         result = await session.execute(select(Product))
         products = result.scalars().all()
         if not products:
-            for i in range(1, 11):
+            for i in range(1, 301):
                 price = random.randint(50000, 1500000)
                 category = random.choice(categories)
                 brand = random.choice(brands)
