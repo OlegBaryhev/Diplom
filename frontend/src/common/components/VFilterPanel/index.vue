@@ -83,7 +83,7 @@ const emits = defineEmits([
 const acceptFilter = () => {
   emits('accept-filter');
 };
-const isOpen = ref(props.isOpen);
+const isOpen = useVModel(props, 'isOpen', emits);
 </script>
 
 <style lang="scss" scoped>
@@ -96,7 +96,8 @@ const isOpen = ref(props.isOpen);
   flex-direction: column;
   gap: 3px;
   transition: 0.2s ease-in-out width;
-  position: relative;
+  position: fixed;
+  background: theme('colors.white');
   border-right: 1px solid theme("colors.main.400");
 
   &__wrapper {
