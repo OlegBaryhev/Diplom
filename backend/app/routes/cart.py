@@ -8,6 +8,7 @@ from app.models.products import Product
 from app.auth.dependencies import get_current_user
 from app.models.user import User
 from app.schemas.cart import CartItemRead, CartItemCreate, CartSearchRequest, CartSummary, CartItemUpdate
+from app.schemas.paginated import PaginatedResponse
 from app.schemas.user import UserRead
 from typing import Optional, List
 from pydantic import BaseModel
@@ -16,7 +17,7 @@ from app.schemas.products import ProductRead
 
 router = APIRouter()
 
-@router.post("/search", response_model=List[CartSummary])
+@router.post("/search", response_model=PaginatedResponse[CartSummary])
 async def search_carts(
     req: CartSearchRequest = Body(...),
     session: AsyncSession = Depends(get_session),
@@ -60,8 +61,13 @@ async def search_carts(
         user_aggregate[user.id]["products_total"] += cart_item.quantity
         user_aggregate[user.id]["total_price"] += product.price * cart_item.quantity
 
+    total = len(user_aggregate)
+    start = (req.page - 1) * req.page_size
+    end = start + req.page_size
+    paginated_values = list(user_aggregate.values())[start:end]
+
     response = []
-    for data in user_aggregate.values():
+    for data in paginated_values:
         response.append(
             CartSummary(
                 id=data["id"],
@@ -71,7 +77,7 @@ async def search_carts(
             )
         )
 
-    return response
+    return {"items": response, "total": total}
 
 
 @router.get("/", response_model=list[CartItemRead])

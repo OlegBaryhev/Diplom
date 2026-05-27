@@ -16,7 +16,7 @@ export const recalculateFixedValue = (data: FixedValueRequest) =>
 export const recalculateAverageRelativePrice = (data: AverageRelativePriceRequest) =>
   api.post(`${REMOTE_SERVER_URL}/recalculate/average_relative_price`, data);
 
-export const getRecalculateHistorysRequest = (data: PriceRecalculationFilter) =>
+export const getRecalculateHistorysRequest = (data: PriceRecalculationFilter & { page?: number; page_size?: number }) =>
   api.post(`${REMOTE_SERVER_URL}/recalculate_history/search`, data);
 
 export const exportRecalculateHistorysRequest = (data: PriceRecalculationFilter) =>

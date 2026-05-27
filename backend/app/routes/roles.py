@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Form, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import or_, asc, desc
+from sqlalchemy import or_, asc, desc, func
 from typing import Optional, List
 from app.database import get_session
 from app.models.roles import Role
 from app.models.user import User
 from app.schemas.roles import RoleRead, RoleCreate, RoleUpdate
+from app.schemas.paginated import PaginatedResponse
 from app.auth.dependencies import get_current_user
 
 router = APIRouter()
@@ -25,13 +26,20 @@ async def get_roles(
     roles = result.scalars().all()
     return roles
 
-@router.post("/search", response_model=List[RoleRead])
+@router.post("/search", response_model=PaginatedResponse[RoleRead])
 async def search_roles(
     search: Optional[str] = Form(None),
     sort_by: Optional[str] = Form("id_asc"),
+    page: int = Form(1),
+    page_size: int = Form(100),
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(is_superuser)
 ):
+    count_query = select(func.count(Role.id))
+    if search:
+        count_query = count_query.where(Role.name.ilike(f"%{search}%"))
+    total = (await session.execute(count_query)).scalar_one()
+
     query = select(Role)
     if search:
         query = query.filter(Role.name.ilike(f"%{search}%"))
@@ -41,9 +49,10 @@ async def search_roles(
         query = query.order_by(desc(Role.name))
     else:
         query = query.order_by(asc(Role.id))
+
+    query = query.offset((page - 1) * page_size).limit(page_size)
     result = await session.execute(query)
-    roles = result.scalars().all()
-    return roles
+    return {"items": result.scalars().all(), "total": total}
 
 @router.post("/", response_model=RoleRead, status_code=status.HTTP_201_CREATED)
 async def create_role(

@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Form, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from app.database import get_session
 from app.models.brand import Brand
 from app.schemas.brand import BrandCreate, BrandRead, BrandBase
+from app.schemas.paginated import PaginatedResponse
 from app.models.user import User, UserRole
 from app.auth.dependencies import get_current_user
 from typing import Optional
@@ -14,12 +15,19 @@ from fastapi.responses import StreamingResponse
 
 router = APIRouter()
 
-@router.post("/search", response_model=list[BrandRead])
+@router.post("/search", response_model=PaginatedResponse[BrandRead])
 async def search_brands(
     search: Optional[str] = Form(None),
     sort_by: Optional[str] = Form(None),
+    page: int = Form(1),
+    page_size: int = Form(100),
     session: AsyncSession = Depends(get_session)
 ):
+    count_query = select(func.count(Brand.id))
+    if search:
+        count_query = count_query.where(Brand.name.ilike(f"%{search}%"))
+    total = (await session.execute(count_query)).scalar_one()
+
     query = select(Brand)
     if search:
         query = query.filter(Brand.name.ilike(f"%{search}%"))
@@ -28,8 +36,9 @@ async def search_brands(
     elif sort_by == "name_desc":
         query = query.order_by(Brand.name.desc())
 
+    query = query.offset((page - 1) * page_size).limit(page_size)
     result = await session.execute(query)
-    return result.scalars().all()
+    return {"items": result.scalars().all(), "total": total}
 
 @router.get("/", response_model=list[BrandRead])
 async def list_brands(session: AsyncSession = Depends(get_session)):

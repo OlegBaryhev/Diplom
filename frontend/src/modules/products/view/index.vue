@@ -14,9 +14,12 @@
         :title="PAGE_TITLE"
         :modes="ICON_ITEMS"
         show-total
-        :total="products?.length"
+        :total="total"
+        :page="page"
         :items="products"
         :loading="loading"
+        :fetching-more-items-func="fetchMoreProducts"
+        @update:page="page = $event"
         @accept-filter="acceptFilters()"
         @clear-filter="clearFilters()"
         @action="onActionsClick"
@@ -130,6 +133,7 @@ import {
   exportProductsRequest,
   deleteProductsRequest,
 } from '../api';
+import { TABLE_ITEM_COUNT_TO_FETCH } from '@/consts';
 
 import type {
   Category,
@@ -226,7 +230,9 @@ const filters = ref<productFilter>(cloneDeep(DEFAULT_FILTERS));
 const checkDisableClear = (obj) =>
   Object.values(obj).every((el) => Array.isArray(el) ? !el?.length : !el);
 
-const products = ref<Product[] | null>([]);
+const products = ref<Product[]>([]);
+const page = ref<number>(1);
+const total = ref<number>(0);
 
 const categories = ref<Category[] | null>([]);
 const brand = ref<any[] | null>([]);
@@ -287,28 +293,49 @@ const exportProducts = async () => {
 
 const fetchProducts = debounce(async () => {
   productsLoading.value = true;
+  page.value = 1;
 
   try {
-    const params = {
+    const result = await getProductsRequest({
       ...(searchQuery.value && { search: searchQuery.value }),
       ...(filters.value?.min_price && { min_price: filters.value.min_price * 100 }),
       ...(filters.value?.max_price && { max_price: filters.value.max_price * 100 }),
       ...(filters.value?.category_id?.id && { category_id: filters.value?.category_id?.id }),
       ...(filters.value?.brand_id?.id && { brand_id: filters.value?.brand_id?.id }),
       ...(sorting.value?.value && { sort_by: sorting.value?.value }),
-    };
-
-    const result = await getProductsRequest({
-      ...params,
+      page: 1,
+      page_size: TABLE_ITEM_COUNT_TO_FETCH,
     });
 
-    products.value = result?.data ?? [];
+    products.value = result?.data?.items ?? [];
+    total.value = result?.data?.total ?? 0;
   } catch (error) {
     console.error(error);
   } finally {
     productsLoading.value = false;
   }
 });
+
+const fetchMoreProducts = async (): Promise<void> => {
+  try {
+    const result = await getProductsRequest({
+      ...(searchQuery.value && { search: searchQuery.value }),
+      ...(filters.value?.min_price && { min_price: filters.value.min_price * 100 }),
+      ...(filters.value?.max_price && { max_price: filters.value.max_price * 100 }),
+      ...(filters.value?.category_id?.id && { category_id: filters.value?.category_id?.id }),
+      ...(filters.value?.brand_id?.id && { brand_id: filters.value?.brand_id?.id }),
+      ...(sorting.value?.value && { sort_by: sorting.value?.value }),
+      page: page.value,
+      page_size: TABLE_ITEM_COUNT_TO_FETCH,
+    });
+
+    products.value = [...products.value, ...(result?.data?.items ?? [])];
+    total.value = result?.data?.total ?? 0;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
 
 const fetchAll = async () => {
   await fetchProducts();

@@ -9,10 +9,13 @@
         :column-headers="TABLE_COLUMN_HEADERS"
         :sorting-options="SORTING_OPTIONS"
         show-total
-        :total="users.length"
+        :total="total"
+        :page="page"
         :items="users"
         :loading="loading"
+        :fetching-more-items-func="fetchMoreUsers"
         title="Пользователи"
+        @update:page="page = $event"
       >
         <template #default="{ item }">
           <TableBody :item="item" />
@@ -65,6 +68,7 @@ import {
   exportUsersRequest,
   deleteUserRequest,
 } from '../api';
+import { TABLE_ITEM_COUNT_TO_FETCH } from '@/consts';
 
 import type { UserItem } from '../types';
 
@@ -101,7 +105,9 @@ const detailedItem = ref<any>(null);
 
 const sorting = ref<string>(SORTING_OPTIONS[0] ?? '');
 
-const users = ref<UserItem[] | null>([]);
+const users = ref<UserItem[]>([]);
+const page = ref<number>(1);
+const total = ref<number>(0);
 
 const itemToDelete = ref(null);
 const isItemBeingAdded = ref<boolean>(false);
@@ -136,6 +142,7 @@ const exportUsers = async () => {
 
 const fetchUsers = debounce(async () => {
   productsLoading.value = true;
+  page.value = 1;
 
   try {
     const formData = new FormData();
@@ -148,16 +155,37 @@ const fetchUsers = debounce(async () => {
     for (const key in params) {
       formData.append(key, params[key].toString());
     }
+    formData.append('page', '1');
+    formData.append('page_size', TABLE_ITEM_COUNT_TO_FETCH.toString());
 
     const result = await getUsersRequest(formData);
 
-    users.value = result?.data ?? [];
+    users.value = result?.data?.items ?? [];
+    total.value = result?.data?.total ?? 0;
   } catch (error) {
     console.error(error);
   } finally {
     productsLoading.value = false;
   }
 });
+
+const fetchMoreUsers = async (): Promise<void> => {
+  try {
+    const formData = new FormData();
+    if (searchQuery.value) formData.append('search', searchQuery.value);
+    if (sorting.value?.value) formData.append('sort_by', sorting.value.value);
+    formData.append('page', page.value.toString());
+    formData.append('page_size', TABLE_ITEM_COUNT_TO_FETCH.toString());
+
+    const result = await getUsersRequest(formData);
+
+    users.value = [...users.value, ...(result?.data?.items ?? [])];
+    total.value = result?.data?.total ?? 0;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
 
 const deleteItem = async () => {
   try {

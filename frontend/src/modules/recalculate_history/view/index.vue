@@ -10,9 +10,12 @@
         :sorting-options="SORTING_OPTIONS"
         :title="PAGE_TITLE"
         show-total
-        :total="recalculateHistorys?.length"
+        :total="total"
+        :page="page"
         :items="recalculateHistorys"
         :loading="loading"
+        :fetching-more-items-func="fetchMoreRecalculateHistorys"
+        @update:page="page = $event"
         @accept-filter="acceptFilters()"
         @clear-filter="clearFilters()"
       >
@@ -45,6 +48,7 @@ import {
   getRecalculateHistorysRequest,
   exportRecalculateHistorysRequest,
 } from '../api';
+import { TABLE_ITEM_COUNT_TO_FETCH } from '@/consts';
 
 import TableBody from '../components/TableBody.vue';
 import SidePanel from '../components/SidePanel.vue';
@@ -77,7 +81,9 @@ const detailedItem = ref<any>(null);
 
 const sorting = ref<string>(SORTING_OPTIONS[0] ?? '');
 
-const recalculateHistorys = ref<any[] | null>([]);
+const recalculateHistorys = ref<any[]>([]);
+const page = ref<number>(1);
+const total = ref<number>(0);
 
 const recalculateHistorysLoading = ref<boolean>(false);
 const loading = computed<boolean>(() => recalculateHistorysLoading.value);
@@ -108,22 +114,41 @@ const exportRecalculateHistorys = async () => {
 
 const fetchRecalculateHistorys = debounce(async () => {
   recalculateHistorysLoading.value = true;
+  page.value = 1;
 
   try {
-    const params = {
+    const result = await getRecalculateHistorysRequest({
       ...(searchQuery.value && { search: searchQuery.value }),
       ...(sorting.value?.value && { sort_by: sorting.value?.value }),
-    };
+      page: 1,
+      page_size: TABLE_ITEM_COUNT_TO_FETCH,
+    });
 
-    const result = await getRecalculateHistorysRequest({ ...params });
-
-    recalculateHistorys.value = result?.data ?? [];
+    recalculateHistorys.value = result?.data?.items ?? [];
+    total.value = result?.data?.total ?? 0;
   } catch (error) {
     console.error(error);
   } finally {
     recalculateHistorysLoading.value = false;
   }
 });
+
+const fetchMoreRecalculateHistorys = async (): Promise<void> => {
+  try {
+    const result = await getRecalculateHistorysRequest({
+      ...(searchQuery.value && { search: searchQuery.value }),
+      ...(sorting.value?.value && { sort_by: sorting.value?.value }),
+      page: page.value,
+      page_size: TABLE_ITEM_COUNT_TO_FETCH,
+    });
+
+    recalculateHistorys.value = [...recalculateHistorys.value, ...(result?.data?.items ?? [])];
+    total.value = result?.data?.total ?? 0;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
 
 watch(
   () => [searchQuery.value, sorting.value?.value],

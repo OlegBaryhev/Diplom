@@ -12,6 +12,8 @@ export const getProductsRequest = (data?: {
   category_id?: number;
   brand_id?: number;
   sort_by?: string;
+  page?: number;
+  page_size?: number;
 }) => api.post(`${REMOTE_SERVER_URL}/products/search`, data || {});
 
 export const addProductRequest = (data: any) => api.post(`${REMOTE_SERVER_URL}/products`, data);

@@ -9,12 +9,14 @@ from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
+from sqlalchemy import func
 
 import pandas as pd
 
 from app.database import get_session
 from app.models.products import Product
 from app.schemas.products import ProductRead, ProductCreate, ProductBase
+from app.schemas.paginated import PaginatedResponse
 
 router = APIRouter()
 
@@ -88,24 +90,29 @@ class ProductSearchRequest(BaseModel):
     sort_by: Optional[str] = None
     category_id: Optional[int] = None
     brand_id: Optional[int] = None
+    page: int = 1
+    page_size: int = 100
 
-@router.post("/search", response_model=list[ProductRead])
+@router.post("/search", response_model=PaginatedResponse[ProductRead])
 async def search_products(
     search_req: ProductSearchRequest,
     session: AsyncSession = Depends(get_session)
 ):
-    query = select(Product).options(selectinload(Product.category), selectinload(Product.brand))
-
+    conditions = []
     if search_req.search:
-        query = query.filter(Product.name.ilike(f"%{search_req.search}%"))
+        conditions.append(Product.name.ilike(f"%{search_req.search}%"))
     if search_req.min_price is not None:
-        query = query.filter(Product.price >= search_req.min_price)
+        conditions.append(Product.price >= search_req.min_price)
     if search_req.max_price is not None:
-        query = query.filter(Product.price <= search_req.max_price)
+        conditions.append(Product.price <= search_req.max_price)
     if search_req.category_id:
-        query = query.filter(Product.category_id == search_req.category_id)
+        conditions.append(Product.category_id == search_req.category_id)
     if search_req.brand_id:
-        query = query.filter(Product.brand_id == search_req.brand_id)
+        conditions.append(Product.brand_id == search_req.brand_id)
+
+    total = (await session.execute(select(func.count(Product.id)).where(*conditions))).scalar_one()
+
+    query = select(Product).options(selectinload(Product.category), selectinload(Product.brand)).where(*conditions)
 
     if search_req.sort_by == "price_asc":
         query = query.order_by(Product.price.asc())
@@ -116,9 +123,9 @@ async def search_products(
     elif search_req.sort_by == "name_desc":
         query = query.order_by(Product.name.desc())
 
+    query = query.offset((search_req.page - 1) * search_req.page_size).limit(search_req.page_size)
     result = await session.execute(query)
-    products = result.scalars().all()
-    return products
+    return {"items": result.scalars().all(), "total": total}
 
 
 @router.get("/{product_id}", response_model=ProductRead)
