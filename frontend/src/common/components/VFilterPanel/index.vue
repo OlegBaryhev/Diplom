@@ -97,6 +97,7 @@ const isOpen = useVModel(props, 'isOpen', emits);
   gap: 3px;
   transition: 0.2s ease-in-out width;
   position: fixed;
+  z-index: 60;
   background: theme('colors.white');
   border-right: 1px solid theme("colors.main.400");
 

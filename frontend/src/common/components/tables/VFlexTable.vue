@@ -595,6 +595,21 @@ $tile-bg: #cfcfdf;
       pointer-events: none;
     }
   }
+
+  &--disabled-page-mode {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    .flex-table__body {
+      flex: 1;
+      min-height: 0;
+
+      &-scroller {
+        height: 100%;
+      }
+    }
+  }
 }
 
 .actions-styles {

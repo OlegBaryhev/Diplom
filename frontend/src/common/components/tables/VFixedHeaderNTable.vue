@@ -224,7 +224,7 @@ watch(windowScroll.y, (newScrollY, oldScrollY) => {
   :deep() .flex-table__header {
     position: sticky;
     top: 0;
-    z-index: 60;
+    z-index: 56;
     transition: top 0.2s;
   }
 
