@@ -219,11 +219,11 @@ watch(windowScroll.y, (newScrollY, oldScrollY) => {
 <style lang="scss" scoped>
 .table {
   display: block;
-  padding-top: 68px;
+  height: 100%;
 
   :deep() .flex-table__header {
     position: sticky;
-    top: 68px;
+    top: 0;
     z-index: 60;
     transition: top 0.2s;
   }

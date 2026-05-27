@@ -1,5 +1,5 @@
 <template>
-  <header class="filter-header w-full flex-col flex min-h-[80px] justify-between min-w-fit">
+  <header class="filter-header w-full flex-col flex min-h-[128px] justify-between min-w-fit">
     <div
       v-if="title"
       class="filter-header__title-wrapper min-h-[70px] h-full flex items-center"
