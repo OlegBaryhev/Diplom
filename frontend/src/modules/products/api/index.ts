@@ -1,5 +1,4 @@
 import api from '@/api';
-
 import { REMOTE_SERVER_URL } from '@/consts';
 
 export const getCategoriesRequest = () => api.get(`${REMOTE_SERVER_URL}/category/`);
@@ -17,8 +16,17 @@ export const getProductsRequest = (data?: {
 }) => api.post(`${REMOTE_SERVER_URL}/products/search`, data || {});
 
 export const addProductRequest = (data: any) => api.post(`${REMOTE_SERVER_URL}/products`, data);
-export const updateProductRequest = (id: string, data: any) => api.put(`${REMOTE_SERVER_URL}/products/${id}`, data);
-
+export const updateProductRequest = (id: string | number, data: any) => api.put(`${REMOTE_SERVER_URL}/products/${id}`, data);
+export const deleteProductsRequest = (id: string | number) => api.delete(`${REMOTE_SERVER_URL}/products/${id}`);
 export const exportProductsRequest = (data: any) => api.post(`${REMOTE_SERVER_URL}/products/export/xlsx`, data, { responseType: 'blob' });
 
-export const deleteProductsRequest = (id: string) => api.delete(`${REMOTE_SERVER_URL}/products/${id}`);
+export const uploadProductImageRequest = (productId: number, formData: FormData) =>
+  api.post(`${REMOTE_SERVER_URL}/products/${productId}/images`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+
+export const deleteProductImageRequest = (productId: number, imageId: number) =>
+  api.delete(`${REMOTE_SERVER_URL}/products/${productId}/images/${imageId}`);
+
+export const setPrimaryImageRequest = (productId: number, imageId: number) =>
+  api.put(`${REMOTE_SERVER_URL}/products/${productId}/images/${imageId}/set-primary`);

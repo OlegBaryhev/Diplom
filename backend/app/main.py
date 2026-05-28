@@ -48,6 +48,9 @@ app.include_router(logs_router, prefix="/logs", tags=["Logs"])
 os.makedirs("avatars", exist_ok=True)
 app.mount("/avatars", StaticFiles(directory="avatars"), name="avatars")
 
+os.makedirs("product_images", exist_ok=True)
+app.mount("/product_images", StaticFiles(directory="product_images"), name="product_images")
+
 logger = logging.getLogger("uvicorn.error")
 
 @app.exception_handler(RequestValidationError)

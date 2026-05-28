@@ -24,6 +24,10 @@ Base = declarative_base()
 async def create_tables():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # Idempotent column addition for fields added after initial schema
+        await conn.execute(text(
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS discount INTEGER NOT NULL DEFAULT 0"
+        ))
 
 async def init_logs():
     sql_file = "sql/create_log_triggers.sql"

@@ -1,4 +1,5 @@
 from .products import Product
+from .product_image import ProductImage
 from .brand import Brand
 from .category import Category
 from .cart import CartItem

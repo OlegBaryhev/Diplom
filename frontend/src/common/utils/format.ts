@@ -145,6 +145,9 @@ export const getDayUnixTime = (time: string): number => {
 
 export const getInitialsFormat = (surname: string | null | undefined, name: string | null | undefined) => `${surname || ''} ${name && name[0] ? `${name[0].toUpperCase()}.` : ''}`;
 
+export const calcDiscountedPrice = (priceKopecks: number, discountPercent: number): number =>
+  Math.round(priceKopecks * (1 - discountPercent / 100));
+
 export const formatBool = (value:boolean, options?: { trueValue?: string; falseValue?: string }): string => {
   const defaultOptions = {
     trueValue: 'Да',

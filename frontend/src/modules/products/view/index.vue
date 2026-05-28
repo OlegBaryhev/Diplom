@@ -12,7 +12,6 @@
         :column-headers="TABLE_COLUMN_HEADERS"
         :sorting-options="SORTING_OPTIONS"
         :title="PAGE_TITLE"
-        :modes="ICON_ITEMS"
         show-total
         :total="total"
         :page="page"
@@ -24,8 +23,25 @@
         @clear-filter="clearFilters()"
         @action="onActionsClick"
       >
+        <!-- Table rows -->
         <template #default="{ item }">
           <TableBody :item="item" />
+        </template>
+
+        <!-- View mode switcher (slot forwarded to VFilterHeader) -->
+        <template #view-mode>
+          <div class="view-switcher">
+            <VBtn
+              v-for="mode in VIEW_MODES"
+              :key="mode.value"
+              ghost
+              small
+              :icon="mode.icon"
+              :title="mode.label"
+              :class="{ 'view-switcher__btn--active': viewMode === mode.value }"
+              @click="viewMode = mode.value"
+            />
+          </div>
         </template>
 
         <template #header-actions>
@@ -62,7 +78,6 @@
               sm
               data-test="min_price"
             />
-
             <VInput
               v-model="temporaryFilters.max_price"
               class="w-full"
@@ -97,6 +112,33 @@
           />
         </template>
       </VFixedHeaderNTable>
+
+      <!-- Card mode grid (outside VFixedHeaderNTable to avoid table shell) -->
+      <Transition name="view-mode-fade">
+        <div
+          v-if="viewMode === 'cards' && !loading"
+          class="cards-overlay"
+        >
+          <div
+            v-if="products.length"
+            class="cards-grid"
+          >
+            <ProductCard
+              v-for="product in products"
+              :key="product.id"
+              :product="product"
+              @edit="detailedItem = product"
+              @buy="cartStore.addToCart(product)"
+            />
+          </div>
+          <p
+            v-else
+            class="cards-empty"
+          >
+            Нет товаров
+          </p>
+        </div>
+      </Transition>
     </div>
 
     <SidePanel
@@ -117,9 +159,7 @@
       @closed="itemToDelete = null"
     />
 
-    <RecalculateModal
-      modal-id="recalculateModal"
-    />
+    <RecalculateModal modal-id="recalculateModal" />
   </div>
 </template>
 
@@ -135,55 +175,56 @@ import {
 } from '../api';
 import { TABLE_ITEM_COUNT_TO_FETCH } from '@/consts';
 
-import type {
-  Category,
-  Product,
-  productFilter,
-} from '../types';
+import type { Category, Product, productFilter } from '../types';
 
 import { useModals } from '@/stores/modals';
-
 import TableBody from '../components/TableBody.vue';
 import SidePanel from '../components/SidePanel.vue';
 import RecalculateModal from '../components/RecalculateModal.vue';
+import ProductCard from '../components/ProductCard.vue';
 
 import type { ColumnHeader } from '@/common/components/VTable/types';
 import { downloadFileByBlob } from '@/common/utils/download-file';
-
 import { Permissions } from '@/common/types/permissions';
 import { userHasPermission } from '@/common/utils/permissions';
 import { useCart } from '@/stores/cart';
 
 const cartStore = useCart();
-
 const PAGE_TITLE = 'Продукты';
-
 const modalStore = useModals();
 
+const VIEW_MODES = [
+  { value: 'table', icon: 'table', label: 'Таблица' },
+  { value: 'cards', icon: 'cards', label: 'Карточки' },
+] as const;
+
+type ViewMode = typeof VIEW_MODES[number]['value'];
+
+const SESSION_KEY = 'products-view-mode';
+const storedMode = sessionStorage.getItem(SESSION_KEY) as ViewMode | null;
+const viewMode = ref<ViewMode>(
+  (storedMode && VIEW_MODES.some((m) => m.value === storedMode)) ? storedMode : 'table',
+);
+watch(viewMode, (v) => sessionStorage.setItem(SESSION_KEY, v));
+
 const TABLE_COLUMN_HEADERS: ColumnHeader[] = [
+  { name: 'Фото', key: 'image' },
   { name: 'Наименование', key: 'name' },
   { name: 'Описание', key: 'description' },
   { name: 'Категория', key: 'category' },
   { name: 'Бренд', key: 'brand' },
+  { name: 'Скидка', key: 'discount' },
   { name: 'Цена, ₽', key: 'price' },
 ];
 
 const ACTIONS_LIST = [
-  {
-    name: 'Добавить в корзину',
-    icon: 'cart',
-    emit: 'add-to-cart',
-  },
+  { name: 'Добавить в корзину', icon: 'cart', emit: 'add-to-cart' },
 ];
 
-const addProductToCart = (item: Product) => {
-  cartStore.addToCart(item);
-};
+const addProductToCart = (item: Product) => cartStore.addToCart(item);
 
 const onActionsClick = (event: any) => {
-  if (event.action.emit === 'add-to-cart') {
-    addProductToCart(event.item);
-  }
+  if (event.action.emit === 'add-to-cart') addProductToCart(event.item);
 };
 
 const DEFAULT_FILTERS = {
@@ -193,26 +234,6 @@ const DEFAULT_FILTERS = {
   brand_id: '',
 };
 
-const ICON_ITEMS = [
-  {
-    icon: 'table',
-    instance: 'table',
-    hint: 'Таблица',
-  },
-  {
-    icon: 'rows',
-    instance: 'rows',
-    hint: 'Список',
-  },
-  {
-    icon: 'cards',
-    instance: 'cards',
-    hint: 'Карточки',
-  },
-];
-
-const searchQuery = ref<string>('');
-
 const SORTING_OPTIONS = [
   { value: 'price_ask', name: 'По возрастанию' },
   { value: 'price_desc', name: 'По убыванию' },
@@ -220,37 +241,30 @@ const SORTING_OPTIONS = [
   { value: 'name_desc', name: 'Название: Я-А' },
 ];
 
+const searchQuery = ref<string>('');
 const detailedItem = ref<any>(null);
-
 const sorting = ref<string>(SORTING_OPTIONS[0] ?? '');
-
 const temporaryFilters = ref<productFilter>(cloneDeep(DEFAULT_FILTERS));
 const filters = ref<productFilter>(cloneDeep(DEFAULT_FILTERS));
-
-const checkDisableClear = (obj) =>
+const checkDisableClear = (obj: any) =>
   Object.values(obj).every((el) => Array.isArray(el) ? !el?.length : !el);
 
 const products = ref<Product[]>([]);
 const page = ref<number>(1);
 const total = ref<number>(0);
-
 const categories = ref<Category[] | null>([]);
 const brand = ref<any[] | null>([]);
-
 const itemToDelete = ref(null);
 const isItemBeingAdded = ref<boolean>(false);
-
 const filterLoading = ref<boolean>(false);
 const productsLoading = ref<boolean>(false);
 const loading = computed<boolean>(() => filterLoading.value || productsLoading.value);
 
 const fetchFilters = async () => {
   filterLoading.value = true;
-
   try {
     const { data: categoryData } = await getCategoriesRequest();
     categories.value = categoryData;
-
     const { data: brandsData } = await getBrandsRequest();
     brand.value = brandsData;
   } catch (error) {
@@ -260,13 +274,11 @@ const fetchFilters = async () => {
     filterLoading.value = false;
   }
 };
-
 fetchFilters();
 
 const exportProductsLoading = ref<boolean>(false);
 const exportProducts = async () => {
   exportProductsLoading.value = true;
-
   try {
     const formData = new FormData();
     const params = {
@@ -277,13 +289,11 @@ const exportProducts = async () => {
       ...(filters.value?.brand_id?.id && { brand_id: filters.value?.brand_id?.id }),
       ...(sorting.value?.value && { sort_by: sorting.value?.value }),
     };
-
     // eslint-disable-next-line no-restricted-syntax, guard-for-in
     for (const key in params) {
-      formData.append(key, params[key].toString());
+      formData.append(key, (params as any)[key].toString());
     }
     formData.append('filename', 'products.xlsx');
-
     const { data } = await exportProductsRequest(formData);
     downloadFileByBlob(data, 'products.xlsx');
   } finally {
@@ -291,22 +301,22 @@ const exportProducts = async () => {
   }
 };
 
+const buildParams = (p = 1) => ({
+  ...(searchQuery.value && { search: searchQuery.value }),
+  ...(filters.value?.min_price && { min_price: filters.value.min_price * 100 }),
+  ...(filters.value?.max_price && { max_price: filters.value.max_price * 100 }),
+  ...(filters.value?.category_id?.id && { category_id: filters.value?.category_id?.id }),
+  ...(filters.value?.brand_id?.id && { brand_id: filters.value?.brand_id?.id }),
+  ...(sorting.value?.value && { sort_by: sorting.value?.value }),
+  page: p,
+  page_size: TABLE_ITEM_COUNT_TO_FETCH,
+});
+
 const fetchProducts = debounce(async () => {
   productsLoading.value = true;
   page.value = 1;
-
   try {
-    const result = await getProductsRequest({
-      ...(searchQuery.value && { search: searchQuery.value }),
-      ...(filters.value?.min_price && { min_price: filters.value.min_price * 100 }),
-      ...(filters.value?.max_price && { max_price: filters.value.max_price * 100 }),
-      ...(filters.value?.category_id?.id && { category_id: filters.value?.category_id?.id }),
-      ...(filters.value?.brand_id?.id && { brand_id: filters.value?.brand_id?.id }),
-      ...(sorting.value?.value && { sort_by: sorting.value?.value }),
-      page: 1,
-      page_size: TABLE_ITEM_COUNT_TO_FETCH,
-    });
-
+    const result = await getProductsRequest(buildParams(1));
     products.value = result?.data?.items ?? [];
     total.value = result?.data?.total ?? 0;
   } catch (error) {
@@ -318,17 +328,7 @@ const fetchProducts = debounce(async () => {
 
 const fetchMoreProducts = async (): Promise<void> => {
   try {
-    const result = await getProductsRequest({
-      ...(searchQuery.value && { search: searchQuery.value }),
-      ...(filters.value?.min_price && { min_price: filters.value.min_price * 100 }),
-      ...(filters.value?.max_price && { max_price: filters.value.max_price * 100 }),
-      ...(filters.value?.category_id?.id && { category_id: filters.value?.category_id?.id }),
-      ...(filters.value?.brand_id?.id && { brand_id: filters.value?.brand_id?.id }),
-      ...(sorting.value?.value && { sort_by: sorting.value?.value }),
-      page: page.value,
-      page_size: TABLE_ITEM_COUNT_TO_FETCH,
-    });
-
+    const result = await getProductsRequest(buildParams(page.value));
     products.value = [...products.value, ...(result?.data?.items ?? [])];
     total.value = result?.data?.total ?? 0;
   } catch (error) {
@@ -337,15 +337,11 @@ const fetchMoreProducts = async (): Promise<void> => {
   }
 };
 
-const fetchAll = async () => {
-  await fetchProducts();
-  await fetchFilters();
-};
-
 const deleteItem = async () => {
   try {
     await deleteProductsRequest(itemToDelete.value?.id);
-    await fetchAll();
+    await fetchProducts();
+    await fetchFilters();
   } finally {
     itemToDelete.value = null;
   }
@@ -371,8 +367,69 @@ fetchProducts();
 </script>
 
 <style scoped lang="scss">
-.items :deep() .table {
+// ─── View switcher ────────────────────────────────────────────────────────────
+.view-switcher {
+  display: flex;
+  gap: 2px;
 
+  &__btn--active {
+    color: theme('colors.main.DEFAULT');
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 4px;
+      right: 4px;
+      height: 2px;
+      background: theme('colors.main.DEFAULT');
+      border-radius: 1px;
+    }
+  }
+}
+
+// ─── Cards overlay ────────────────────────────────────────────────────────────
+// 96px = app nav, 141px = VFilterHeader — see TABLE_MIN_HEIGHT constant
+.cards-overlay {
+  position: fixed;
+  top: 237px; // 96px app-nav + 141px filter-header
+  left: 88px;
+  right: 0;
+  bottom: 0;
+  overflow-y: auto;
+  background: white;
+  z-index: 40;
+  padding: 16px 24px 32px;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.cards-empty {
+  @apply text-sm-regular;
+  color: theme('colors.additional.300');
+  text-align: center;
+  padding-top: 48px;
+}
+
+.view-mode-fade-enter-active,
+.view-mode-fade-leave-active {
+  transition: opacity 0.15s ease;
+}
+
+.view-mode-fade-enter-from,
+.view-mode-fade-leave-to {
+  opacity: 0;
+}
+
+// ─── Table column widths ──────────────────────────────────────────────────────
+// Column order: 1=checkbox 2=ID 3=Фото 4=Наименование 5=Описание
+//               6=Категория 7=Бренд 8=Скидка 9=Цена 10=Действия
+.items :deep() .table {
   .flex-table-cell {
     // ID
     &:nth-child(2) {
@@ -381,25 +438,34 @@ fetchProducts();
       max-width: 80px;
     }
 
-    // Наименование
+    // Фото
     &:nth-child(3) {
-      min-width: 16px + 136px + 24px;
+      min-width: 60px;
+      width: 60px;
+      max-width: 60px;
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+
+    // Наименование
+    &:nth-child(4) {
+      min-width: 176px;
       width: 100%;
       max-width: 250px;
       padding-right: 24px;
     }
 
     // Описание
-    &:nth-child(4) {
-      min-width: 128px + 24px;
+    &:nth-child(5) {
+      min-width: 152px;
       width: 100%;
       padding-left: 0;
       padding-right: 24px;
     }
 
     // Категория
-    &:nth-child(5) {
-      min-width: 56px + 24px;
+    &:nth-child(6) {
+      min-width: 80px;
       width: 100%;
       max-width: 200px;
       padding-left: 0;
@@ -407,23 +473,33 @@ fetchProducts();
     }
 
     // Бренд
-    &:nth-child(6) {
-      min-width: 184px + 24px;
-      width: 184px + 24px;
+    &:nth-child(7) {
+      min-width: 120px;
+      width: 120px;
       padding-left: 0;
       padding-right: 24px;
     }
 
+    // Скидка
+    &:nth-child(8) {
+      min-width: 72px;
+      width: 72px;
+      max-width: 80px;
+      padding-left: 0;
+      padding-right: 12px;
+    }
+
     // Цена
-    &:nth-child(7) {
+    &:nth-child(9) {
       min-width: 120px;
       width: 100%;
-      max-width: 120px;
+      max-width: 140px;
       padding-left: 12px;
       padding-right: 12px;
     }
+
     // Действия
-    &:nth-child(8) {
+    &:nth-child(10) {
       min-width: 100px;
       width: 100%;
       max-width: 100px;

@@ -33,6 +33,12 @@
         <template #actions>
           <slot name="header-actions" />
         </template>
+        <template
+          v-if="$slots['view-mode']"
+          #view-mode
+        >
+          <slot name="view-mode" />
+        </template>
       </VFilterHeader>
 
       <VAdvancedFlexTable
