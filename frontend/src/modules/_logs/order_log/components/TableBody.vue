@@ -16,12 +16,6 @@
 import type { ILogData } from '@/modules/_logs/types';
 import { formatDate } from '@/common/utils/format';
 
-/**
- * @oaram id
- * @oaram name
- * @oaram description
- */
-
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const props = defineProps<{ item: ILogData }>();
 </script>

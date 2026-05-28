@@ -114,7 +114,7 @@ async def update_log_settings(
     table_name: str,
     update: LogSettingsUpdate,
     session: AsyncSession = Depends(get_session),
-    current_user: User = Depends(has_permission("logs", "write"))
+    current_user: User = Depends(has_permission("logs", "edit"))
 ):
     result = await session.execute(select(LogSettings).where(LogSettings.table_name == table_name))
     setting = result.scalar_one_or_none()

@@ -5,10 +5,7 @@
     data-test="item-side-panel"
     @close="$emit('close')"
   >
-    <template
-      v-if="!formModel"
-      #head
-    >
+    <template #head>
       <VSidePanelInfoItem
         caption="ID"
         :value="item?.id"
@@ -79,9 +76,7 @@ const emits = defineEmits<{
   (evt: 'delete', item: ILogData): void;
 }>();
 
-const TITLE = 'Лог брендов';
-
-const formModel = ref(null);
+const TITLE = 'Лог заказов';
 
 const handleDelete = (onClose: () => void) => {
   if (props.item) {

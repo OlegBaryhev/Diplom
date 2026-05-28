@@ -1,5 +1,5 @@
 LOGS = {
-    "logs": {"all_subsections": ["read", "delete"]},
+    "logs": {"all_subsections": ["read", "edit", "delete"]},
     "brand_log": {"all_subsections": ["read", "delete"]},
     "category_log": {"all_subsections": ["read", "delete"]},
     "order_log": {"all_subsections": ["read", "delete"]},
