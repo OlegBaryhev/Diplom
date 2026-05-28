@@ -95,10 +95,12 @@ async def init_data():
                 price = random.randint(50000, 1500000)
                 category = random.choice(categories)
                 brand = random.choice(brands)
+                discount = random.choice([0, random.randint(5, 50)])
                 product = Product(
                     name=f"Продукт_{i}",
                     description=f"Описание продукта {i}",
                     price=price,
+                    discount=discount,
                     category_id=category.id,
                     brand_id=brand.id
                 )

@@ -103,9 +103,11 @@ import type { CSSProperties } from 'vue';
 import type { ProductImage } from '@/modules/products/types';
 import { REMOTE_SERVER_URL } from '@/consts';
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   images: ProductImage[];
-}>();
+}>(), {
+  images: () => [],
+});
 
 const currentIndex = ref(0);
 const dragStartX = ref(0);

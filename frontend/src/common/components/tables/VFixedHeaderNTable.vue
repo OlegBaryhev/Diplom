@@ -1,5 +1,8 @@
 <template>
-  <div class="flex items-center h-screen w-full">
+  <div
+    class="flex w-full"
+    :class="props.cardsMode ? '' : 'items-center h-screen'"
+  >
     <VFilterPanel
       v-if="!!slots?.filter?.()[0]?.children?.length"
       v-model:is-open="isOpen"
@@ -19,6 +22,7 @@
       :class="{
         'fixed-header-n-table--open-filter': isOpen && !!slots?.filter?.()[0]?.children?.length,
         'fixed-header-n-table--closed-filter': !isOpen && !!slots?.filter?.()[0]?.children?.length,
+        'fixed-header-n-table--cards': props.cardsMode,
       }"
     >
       <VFilterHeader
@@ -108,6 +112,8 @@
           <slot name="noDataText" />
         </template>
       </VNoData>
+
+      <slot name="cards-content" />
     </div>
   </div>
 </template>
@@ -164,6 +170,7 @@ const props = withDefaults(defineProps<{
   sorting?: string;
   sortingOptions?: any;
   actionsList?: any;
+  cardsMode?: boolean;
 }>(), {
   disableSearch: false,
   noFiltering: false,
@@ -179,6 +186,7 @@ const props = withDefaults(defineProps<{
   disableFilterButton: false,
   disableClearButton: false,
   actionsList: [],
+  cardsMode: false,
 });
 
 // eslint-disable-next-line func-call-spacing, no-spaced-func
@@ -264,6 +272,12 @@ watch(windowScroll.y, (newScrollY, oldScrollY) => {
 
   &--closed-filter {
     margin-left: 70px;
+  }
+
+  &--cards {
+    height: auto;
+    min-width: unset;
+    padding-bottom: 0;
   }
 }
 

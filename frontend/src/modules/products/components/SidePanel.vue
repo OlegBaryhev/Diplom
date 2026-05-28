@@ -7,8 +7,27 @@
     @close="$emit('close')"
   >
     <template #title>
-      <div class="flex gap-7 items-center mb-5">
+      <div class="flex gap-3 items-center mb-5">
+        <div
+          v-if="item"
+          class="side-panel-thumb"
+        >
+          <img
+            v-if="primaryImage && !thumbError"
+            :src="fullUrl(primaryImage.url)"
+            :alt="item.name"
+            class="side-panel-thumb__img"
+            @error="thumbError = true"
+          >
+          <VIcon
+            v-else
+            name="photo"
+            class="side-panel-thumb__icon"
+          />
+        </div>
+
         <VIcon
+          v-if="item"
           name="cart"
           data-test="add-to-cart-button"
           class="h-[20px] w-[20px] text-main-300"
@@ -40,7 +59,6 @@
     <template #default>
       <div class="content">
         <template v-if="!formModel">
-          <!-- View mode -->
           <VSidePanelInfoItem
             class="mb-4"
             caption="Наименование"
@@ -84,23 +102,21 @@
             data-test="product-description"
           />
 
-          <!-- Images in view mode -->
           <div
-            v-if="item?.images?.length"
+            v-if="item"
             class="images-section"
           >
             <p class="images-section__label">
               Изображения
             </p>
             <VCarousel
-              :images="item.images"
+              :images="item.images ?? []"
               class="images-section__carousel"
             />
           </div>
         </template>
 
         <template v-else>
-          <!-- Edit / Create form -->
           <VInput
             v-model="formModel.name"
             label="Наименование"
@@ -175,7 +191,6 @@
             data-test="description"
           />
 
-          <!-- Image management (only for existing products) -->
           <div
             v-if="props.item"
             class="images-section mt-7"
@@ -336,11 +351,14 @@ const emits = defineEmits<{(evt: 'close'): void;
 
 const dateApiError = ref('');
 const discountError = ref('');
+const thumbError = ref(false);
 const hasBeenDeleted = ref<boolean>(false);
 const fileInputRef = ref<HTMLInputElement | null>(null);
 const uploadingImage = ref(false);
 const currentImages = ref<ProductImage[]>([...(props.item?.images ?? [])]);
 const pendingFiles = ref<File[]>([]);
+
+const primaryImage = computed(() => currentImages.value.find((img) => img.is_primary) ?? currentImages.value[0] ?? null);
 
 const formOptions = ref<{ categories: any[]; brands: any[] } | null>(null);
 
@@ -353,6 +371,7 @@ const formModel = ref<{
   brand: null | any;
 } | null>(null);
 
+watch(() => props.item, () => { thumbError.value = false; });
 watch(() => props.item?.images, (imgs) => {
   currentImages.value = [...(imgs ?? [])];
 }, { deep: true });
@@ -483,8 +502,6 @@ const saveOrChange = async (): Promise<void> => {
   }
 };
 
-// ─── Image management ─────────────────────────────────────────────────────
-
 const handleFileUpload = async (e: Event) => {
   if (!props.item) return;
   const { files } = (e.target as HTMLInputElement);
@@ -517,7 +534,6 @@ const removeImage = async (imageId: number) => {
   try {
     await deleteProductImageRequest(props.item.id, imageId);
     currentImages.value = currentImages.value.filter((img) => img.id !== imageId);
-    // if deleted primary, assign to first remaining
     if (currentImages.value.length && !currentImages.value.some((img) => img.is_primary)) {
       currentImages.value[0].is_primary = true;
     }
@@ -650,6 +666,31 @@ const setPrimary = async (imageId: number) => {
     font-weight: 600;
     border-radius: 4px;
     padding: 1px 5px;
+  }
+}
+
+.side-panel-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: theme('colors.main.50');
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid theme('colors.main.100');
+
+  &__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__icon {
+    width: 20px;
+    height: 20px;
+    color: theme('colors.additional.200');
   }
 }
 </style>

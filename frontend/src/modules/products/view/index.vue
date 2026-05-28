@@ -6,6 +6,8 @@
         v-model:search="searchQuery"
         v-model:active-item="detailedItem"
         class="items"
+        :class="{ 'items--cards': viewMode === 'cards' }"
+        :cards-mode="viewMode === 'cards'"
         :disable-filter-button="isEqual(temporaryFilters, filters)"
         :disable-clear-button="checkDisableClear(temporaryFilters)"
         :actions-list="ACTIONS_LIST"
@@ -23,12 +25,10 @@
         @clear-filter="clearFilters()"
         @action="onActionsClick"
       >
-        <!-- Table rows -->
         <template #default="{ item }">
           <TableBody :item="item" />
         </template>
 
-        <!-- View mode switcher (slot forwarded to VFilterHeader) -->
         <template #view-mode>
           <div class="view-switcher">
             <VBtn
@@ -111,34 +111,38 @@
             data-test="select-brand"
           />
         </template>
+        <template #cards-content>
+          <Transition name="view-mode-fade">
+            <div
+              v-if="viewMode === 'cards'"
+              class="cards-content"
+            >
+              <div
+                v-if="products.length || loading"
+                class="cards-grid"
+              >
+                <ProductCard
+                  v-for="product in products"
+                  :key="product.id"
+                  :product="product"
+                  @edit="detailedItem = product"
+                  @buy="cartStore.addToCart(product)"
+                />
+              </div>
+              <p
+                v-else
+                class="cards-empty"
+              >
+                Нет товаров
+              </p>
+              <div
+                ref="cardsBottomRef"
+                class="cards-sentinel"
+              />
+            </div>
+          </Transition>
+        </template>
       </VFixedHeaderNTable>
-
-      <!-- Card mode grid (outside VFixedHeaderNTable to avoid table shell) -->
-      <Transition name="view-mode-fade">
-        <div
-          v-if="viewMode === 'cards' && !loading"
-          class="cards-overlay"
-        >
-          <div
-            v-if="products.length"
-            class="cards-grid"
-          >
-            <ProductCard
-              v-for="product in products"
-              :key="product.id"
-              :product="product"
-              @edit="detailedItem = product"
-              @buy="cartStore.addToCart(product)"
-            />
-          </div>
-          <p
-            v-else
-            class="cards-empty"
-          >
-            Нет товаров
-          </p>
-        </div>
-      </Transition>
     </div>
 
     <SidePanel
@@ -252,6 +256,8 @@ const checkDisableClear = (obj: any) =>
 const products = ref<Product[]>([]);
 const page = ref<number>(1);
 const total = ref<number>(0);
+const cardsBottomRef = ref<HTMLElement | null>(null);
+const cardsIsFetching = ref(false);
 const categories = ref<Category[] | null>([]);
 const brand = ref<any[] | null>([]);
 const itemToDelete = ref(null);
@@ -358,6 +364,14 @@ const acceptFilters = async (): Promise<void> => {
   await fetchProducts();
 };
 
+useIntersectionObserver(cardsBottomRef, ([entry]) => {
+  if (!entry.isIntersecting || cardsIsFetching.value || viewMode.value !== 'cards') return;
+  if (products.value.length >= total.value) return;
+  cardsIsFetching.value = true;
+  page.value += 1;
+  fetchMoreProducts().finally(() => { cardsIsFetching.value = false; });
+});
+
 watch(
   () => [searchQuery.value, sorting.value?.value],
   () => fetchProducts(),
@@ -367,7 +381,6 @@ fetchProducts();
 </script>
 
 <style scoped lang="scss">
-// ─── View switcher ────────────────────────────────────────────────────────────
 .view-switcher {
   display: flex;
   gap: 2px;
@@ -389,24 +402,14 @@ fetchProducts();
   }
 }
 
-// ─── Cards overlay ────────────────────────────────────────────────────────────
-// 96px = app nav, 141px = VFilterHeader — see TABLE_MIN_HEIGHT constant
-.cards-overlay {
-  position: fixed;
-  top: 237px; // 96px app-nav + 141px filter-header
-  left: 88px;
-  right: 0;
-  bottom: 0;
-  overflow-y: auto;
-  background: white;
-  z-index: 40;
-  padding: 16px 24px 32px;
+.cards-content {
+  padding: 8px 8px 40px;
 }
 
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
 }
 
 .cards-empty {
@@ -426,19 +429,23 @@ fetchProducts();
   opacity: 0;
 }
 
-// ─── Table column widths ──────────────────────────────────────────────────────
-// Column order: 1=checkbox 2=ID 3=Фото 4=Наименование 5=Описание
-//               6=Категория 7=Бренд 8=Скидка 9=Цена 10=Действия
+.items--cards :deep() .table,
+.items--cards :deep() .no-data-block {
+  display: none;
+}
+
+.cards-sentinel {
+  height: 1px;
+}
+
 .items :deep() .table {
   .flex-table-cell {
-    // ID
     &:nth-child(2) {
       min-width: 80px;
       width: 100%;
       max-width: 80px;
     }
 
-    // Фото
     &:nth-child(3) {
       min-width: 60px;
       width: 60px;
@@ -447,7 +454,6 @@ fetchProducts();
       padding-right: 8px;
     }
 
-    // Наименование
     &:nth-child(4) {
       min-width: 176px;
       width: 100%;
@@ -455,7 +461,6 @@ fetchProducts();
       padding-right: 24px;
     }
 
-    // Описание
     &:nth-child(5) {
       min-width: 152px;
       width: 100%;
@@ -463,7 +468,6 @@ fetchProducts();
       padding-right: 24px;
     }
 
-    // Категория
     &:nth-child(6) {
       min-width: 80px;
       width: 100%;
@@ -472,7 +476,6 @@ fetchProducts();
       padding-right: 24px;
     }
 
-    // Бренд
     &:nth-child(7) {
       min-width: 120px;
       width: 120px;
@@ -480,7 +483,6 @@ fetchProducts();
       padding-right: 24px;
     }
 
-    // Скидка
     &:nth-child(8) {
       min-width: 72px;
       width: 72px;
@@ -489,7 +491,6 @@ fetchProducts();
       padding-right: 12px;
     }
 
-    // Цена
     &:nth-child(9) {
       min-width: 120px;
       width: 100%;
@@ -498,7 +499,6 @@ fetchProducts();
       padding-right: 12px;
     }
 
-    // Действия
     &:nth-child(10) {
       min-width: 100px;
       width: 100%;
