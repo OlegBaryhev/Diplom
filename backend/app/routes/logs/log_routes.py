@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Path, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, delete, func, and_, or_
+from sqlalchemy import select, delete, func, and_, or_, Text
 from sqlalchemy.sql import asc, desc
 from typing import Optional, List
 from app.database import get_session
@@ -11,7 +11,7 @@ from app.schemas.logs import LogEntryBase, LogFilter, LogSettingsBase, LogSettin
 from app.auth.dependencies import get_current_user, has_permission
 from app.models.user import User
 
-router = APIRouter(prefix="/logs", tags=["Logs"])
+router = APIRouter(tags=["Logs"])
 
 LOG_MODELS = {
     "user": UserLog,
@@ -64,6 +64,16 @@ async def search_logs(
     logs = result.scalars().all()
     return logs
 
+@router.delete("/{table_name}/truncate", status_code=204)
+async def truncate_log_table(
+    table_name: str,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(has_permission("logs", "delete"))
+):
+    model = await get_log_model(table_name)
+    await session.execute(delete(model))
+    await session.commit()
+
 @router.delete("/{table_name}/{log_id}", status_code=204)
 async def delete_log_entry(
     table_name: str,
@@ -77,16 +87,6 @@ async def delete_log_entry(
     if not log_entry:
         raise HTTPException(status_code=404, detail="Log entry not found")
     await session.delete(log_entry)
-    await session.commit()
-
-@router.delete("/{table_name}/truncate", status_code=204)
-async def truncate_log_table(
-    table_name: str,
-    session: AsyncSession = Depends(get_session),
-    current_user: User = Depends(has_permission("logs", "delete"))
-):
-    model = await get_log_model(table_name)
-    await session.execute(delete(model))
     await session.commit()
 
 @router.get("/settings", response_model=List[LogSettingsBase])
