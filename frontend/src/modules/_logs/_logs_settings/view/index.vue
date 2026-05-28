@@ -3,15 +3,16 @@
     <div class="log-settings-page__content w-full h-full">
       <VFixedHeaderNTable
         v-model:search="searchQuery"
+        v-model:sorting="sorting"
         v-model:active-item="detailedItem"
         class="items"
         :column-headers="TABLE_COLUMN_HEADERS"
+        :sorting-options="SORTING_OPTIONS"
         title="Настройки логгирования"
         show-total
-        :total="settings.length"
-        :items="settings"
+        :total="filteredSettings.length"
+        :items="filteredSettings"
         :loading="loading"
-        no-filtering
       >
         <template #default="{ item }">
           <TableBody :item="item" />
@@ -29,6 +30,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { getLogSettingsRequest } from '../api';
 import type { ILogSettings } from '@/modules/_logs/types';
 import TableBody from '../components/TableBody.vue';
@@ -41,10 +43,41 @@ const TABLE_COLUMN_HEADERS: ColumnHeader[] = [
   { name: 'Лимит записей', key: 'count_retention_limit' },
 ];
 
+const SORTING_OPTIONS = [
+  { value: 'table_name_asc', name: 'Таблица: А-Я' },
+  { value: 'table_name_desc', name: 'Таблица: Я-А' },
+  { value: 'retention_asc', name: 'Хранение: по возрастанию' },
+  { value: 'retention_desc', name: 'Хранение: по убыванию' },
+];
+
 const searchQuery = ref<string>('');
+const sorting = ref(SORTING_OPTIONS[0]);
 const detailedItem = ref<ILogSettings | null>(null);
 const settings = ref<ILogSettings[]>([]);
 const loading = ref<boolean>(false);
+
+const filteredSettings = computed<ILogSettings[]>(() => {
+  let result = [...settings.value];
+
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase();
+    result = result.filter((s) => s.table_name.toLowerCase().includes(query));
+  }
+
+  const sortValue = sorting.value?.value ?? '';
+
+  if (sortValue === 'table_name_asc') {
+    result.sort((a, b) => a.table_name.localeCompare(b.table_name));
+  } else if (sortValue === 'table_name_desc') {
+    result.sort((a, b) => b.table_name.localeCompare(a.table_name));
+  } else if (sortValue === 'retention_asc') {
+    result.sort((a, b) => a.time_retention_minutes - b.time_retention_minutes);
+  } else if (sortValue === 'retention_desc') {
+    result.sort((a, b) => b.time_retention_minutes - a.time_retention_minutes);
+  }
+
+  return result;
+});
 
 const fetchSettings = async () => {
   loading.value = true;

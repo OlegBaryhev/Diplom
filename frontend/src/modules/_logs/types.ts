@@ -6,6 +6,7 @@ export interface ILogData {
 }
 
 export interface ILogSettings {
+  id: number;
   table_name: string;
   time_retention_minutes: number;
   count_retention_limit: number;

@@ -16,6 +16,7 @@ class LogFilter(BaseModel):
     sort_by: Optional[str] = None
 
 class LogSettingsBase(BaseModel):
+    id: int
     table_name: str
     time_retention_minutes: int
     count_retention_limit: int

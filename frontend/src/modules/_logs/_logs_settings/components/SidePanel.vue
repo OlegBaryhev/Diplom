@@ -100,12 +100,12 @@ const emits = defineEmits<{
   (evt: 'close'): void;
 }>();
 
-const title = computed(() => (formModel.value ? 'Редактирование' : 'Настройки'));
-
 const formModel = ref<{
   time_retention_minutes: number | string;
   count_retention_limit: number | string;
 } | null>(null);
+
+const title = computed(() => (formModel.value ? 'Редактирование' : 'Настройки'));
 
 const saveChangesLoading = ref(false);
 
