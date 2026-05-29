@@ -1,5 +1,3 @@
-import type { Ref } from 'vue';
-
 export const useGrid = (offsetRef?: Ref<number>, cardWidth:number = 400, gap:number = 16) => {
   const sidebarWidth = 88;
   const gridColumns = ref(0);
