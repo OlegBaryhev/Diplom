@@ -59,6 +59,19 @@
     <template #default>
       <div class="content">
         <template v-if="!formModel">
+          <div
+            v-if="item"
+            class="images-section mb-5"
+          >
+            <p class="images-section__label">
+              Изображения
+            </p>
+            <VCarousel
+              :images="item.images ?? []"
+              class="images-section__carousel"
+            />
+          </div>
+
           <VSidePanelInfoItem
             class="mb-4"
             caption="Наименование"
@@ -101,99 +114,12 @@
             :value="item?.description"
             data-test="product-description"
           />
-
-          <div
-            v-if="item"
-            class="images-section"
-          >
-            <p class="images-section__label">
-              Изображения
-            </p>
-            <VCarousel
-              :images="item.images ?? []"
-              class="images-section__carousel"
-            />
-          </div>
         </template>
 
         <template v-else>
-          <VInput
-            v-model="formModel.name"
-            label="Наименование"
-            secondary
-            sm
-            :error="v$.formModel.name.$errors?.[0]?.$message || dateApiError"
-            @update:model-value="dateApiError = ''"
-          />
-
-          <VInput
-            v-model="formModel.price"
-            class="mt-7"
-            label="Цена"
-            secondary
-            sm
-            mask="number"
-            :max-length="10"
-            :error="unref(v$.formModel.price.$errors[0]?.$message)"
-            data-test="price"
-          />
-
-          <VInput
-            v-model="formModel.discount"
-            class="mt-7"
-            label="Скидка, %"
-            secondary
-            sm
-            mask="number"
-            :max-length="3"
-            placeholder="0"
-            optional
-            :error="discountError"
-            data-test="discount"
-            @update:model-value="discountError = ''"
-          />
-
-          <VMultiselect
-            v-model="formModel.category"
-            :options="formOptions?.categories"
-            item-name="name"
-            class="mt-7"
-            primary-key="id"
-            sm
-            label="Категория"
-            :error="v$.formModel.category.$errors?.[0]?.$message"
-            data-test="select-category"
-          />
-
-          <VMultiselect
-            v-model="formModel.brand"
-            :options="formOptions?.brands"
-            item-name="name"
-            class="mt-7"
-            primary-key="id"
-            sm
-            label="Бренд"
-            :error="v$.formModel.category.$errors?.[0]?.$message"
-            data-test="select-brand"
-          />
-
-          <VInput
-            v-model="formModel.description"
-            input-classes="resize-none"
-            tag="textarea"
-            class="mt-7"
-            label="Описание"
-            optional
-            secondary
-            sm
-            :max-length="180"
-            :error="v$.formModel.description.$errors?.[0]?.$message"
-            data-test="description"
-          />
-
           <div
             v-if="props.item"
-            class="images-section mt-7"
+            class="images-section"
           >
             <div class="images-section__header">
               <p class="images-section__label">
@@ -201,7 +127,7 @@
               </p>
               <VBtn
                 v-if="currentImages.length < 10"
-                extra-small
+                small
                 outlined
                 :loading="uploadingImage"
                 @click="fileInputRef?.click()"
@@ -277,10 +203,85 @@
 
           <p
             v-else-if="pendingFiles.length === 0"
-            class="mt-7 text-xs text-additional-300"
+            class="mb-5 text-xs text-additional-300"
           >
             Изображения можно добавить после создания товара
           </p>
+
+          <VInput
+            v-model="formModel.name"
+            :class="props.item ? 'mt-5' : ''"
+            label="Наименование"
+            secondary
+            sm
+            :error="v$.formModel.name.$errors?.[0]?.$message || dateApiError"
+            @update:model-value="dateApiError = ''"
+          />
+
+          <VInput
+            v-model="formModel.price"
+            class="mt-7"
+            label="Цена"
+            secondary
+            sm
+            mask="number"
+            :max-length="10"
+            :error="unref(v$.formModel.price.$errors[0]?.$message)"
+            data-test="price"
+          />
+
+          <VInput
+            v-model="formModel.discount"
+            class="mt-7"
+            label="Скидка, %"
+            secondary
+            sm
+            mask="number"
+            :max-length="3"
+            placeholder="0"
+            optional
+            :error="discountError"
+            data-test="discount"
+            @update:model-value="discountError = ''"
+          />
+
+          <VMultiselect
+            v-model="formModel.category"
+            :options="formOptions?.categories"
+            item-name="name"
+            class="mt-7"
+            primary-key="id"
+            sm
+            label="Категория"
+            :error="v$.formModel.category.$errors?.[0]?.$message"
+            data-test="select-category"
+          />
+
+          <VMultiselect
+            v-model="formModel.brand"
+            :options="formOptions?.brands"
+            item-name="name"
+            class="mt-7"
+            primary-key="id"
+            sm
+            label="Бренд"
+            :error="v$.formModel.category.$errors?.[0]?.$message"
+            data-test="select-brand"
+          />
+
+          <VInput
+            v-model="formModel.description"
+            input-classes="resize-none"
+            tag="textarea"
+            class="mt-7"
+            label="Описание"
+            optional
+            secondary
+            sm
+            :max-length="180"
+            :error="v$.formModel.description.$errors?.[0]?.$message"
+            data-test="description"
+          />
         </template>
       </div>
     </template>

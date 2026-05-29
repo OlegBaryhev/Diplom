@@ -13,6 +13,7 @@ declare module '@vue/runtime-core' {
     RouterView: typeof import('vue-router')['RouterView']
     VAdvancedFlexTable: typeof import('./src/common/components/tables/VAdvancedFlexTable.vue')['default']
     VBtn: typeof import('./src/common/components/VBtn.vue')['default']
+    VCardList: typeof import('./src/common/components/VCardList.vue')['default']
     VCarousel: typeof import('./src/common/components/VCarousel.vue')['default']
     VCart: typeof import('./src/common/components/VCart/index.vue')['default']
     VCartCounter: typeof import('./src/common/components/VCart/Counter.vue')['default']

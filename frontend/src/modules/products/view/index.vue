@@ -112,35 +112,38 @@
           />
         </template>
         <template #cards-content>
-          <Transition name="view-mode-fade">
-            <div
-              v-if="viewMode === 'cards'"
-              class="cards-content"
+          <div
+            v-if="viewMode === 'cards'"
+            class="cards-content"
+          >
+            <VCardList
+              v-if="products.length"
+              :items="products"
+              :cards-height="440"
+              :cards-width="280"
+              :vertical-margin="10"
+              :horizontal-margin="10"
+              :title-lines-count="1"
+              @scroll-end="onCardsScrollEnd"
             >
-              <div
-                v-if="products.length || loading"
-                class="cards-grid"
-              >
-                <ProductCard
-                  v-for="product in products"
-                  :key="product.id"
-                  :product="product"
-                  @edit="detailedItem = product"
-                  @buy="cartStore.addToCart(product)"
-                />
-              </div>
-              <p
-                v-else
-                class="cards-empty"
-              >
-                Нет товаров
-              </p>
-              <div
-                ref="cardsBottomRef"
-                class="cards-sentinel"
-              />
-            </div>
-          </Transition>
+              <template #default="{ item }">
+                <div class="card-cell">
+                  <ProductCard
+                    :product="item"
+                    @edit="detailedItem = item"
+                    @buy="cartStore.addToCart(item)"
+                  />
+                </div>
+              </template>
+            </VCardList>
+
+            <p
+              v-else-if="!loading"
+              class="cards-empty"
+            >
+              Нет товаров
+            </p>
+          </div>
         </template>
       </VFixedHeaderNTable>
     </div>
@@ -256,7 +259,6 @@ const checkDisableClear = (obj: any) =>
 const products = ref<Product[]>([]);
 const page = ref<number>(1);
 const total = ref<number>(0);
-const cardsBottomRef = ref<HTMLElement | null>(null);
 const cardsIsFetching = ref(false);
 const categories = ref<Category[] | null>([]);
 const brand = ref<any[] | null>([]);
@@ -364,13 +366,12 @@ const acceptFilters = async (): Promise<void> => {
   await fetchProducts();
 };
 
-useIntersectionObserver(cardsBottomRef, ([entry]) => {
-  if (!entry.isIntersecting || cardsIsFetching.value || viewMode.value !== 'cards') return;
-  if (products.value.length >= total.value) return;
+const onCardsScrollEnd = () => {
+  if (cardsIsFetching.value || products.value.length >= total.value) return;
   cardsIsFetching.value = true;
   page.value += 1;
   fetchMoreProducts().finally(() => { cardsIsFetching.value = false; });
-});
+};
 
 watch(
   () => [searchQuery.value, sorting.value?.value],
@@ -403,13 +404,13 @@ fetchProducts();
 }
 
 .cards-content {
-  padding: 8px 8px 40px;
+  padding: 0 0 40px;
 }
 
-.cards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+.card-cell {
+  padding: 10px;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .cards-empty {
@@ -419,23 +420,9 @@ fetchProducts();
   padding-top: 48px;
 }
 
-.view-mode-fade-enter-active,
-.view-mode-fade-leave-active {
-  transition: opacity 0.15s ease;
-}
-
-.view-mode-fade-enter-from,
-.view-mode-fade-leave-to {
-  opacity: 0;
-}
-
 .items--cards :deep() .table,
 .items--cards :deep() .no-data-block {
   display: none;
-}
-
-.cards-sentinel {
-  height: 1px;
 }
 
 .items :deep() .table {

@@ -19,10 +19,16 @@
 
     <div
       class="fixed-header-n-table"
+      :style="props.cardsMode ? {
+        height: 'auto',
+        width: 'auto',
+        minWidth: '0',
+        flex: '1',
+        paddingBottom: '0',
+      } : {}"
       :class="{
         'fixed-header-n-table--open-filter': isOpen && !!slots?.filter?.()[0]?.children?.length,
         'fixed-header-n-table--closed-filter': !isOpen && !!slots?.filter?.()[0]?.children?.length,
-        'fixed-header-n-table--cards': props.cardsMode,
       }"
     >
       <VFilterHeader
@@ -272,12 +278,6 @@ watch(windowScroll.y, (newScrollY, oldScrollY) => {
 
   &--closed-filter {
     margin-left: 70px;
-  }
-
-  &--cards {
-    height: auto;
-    min-width: unset;
-    padding-bottom: 0;
   }
 }
 

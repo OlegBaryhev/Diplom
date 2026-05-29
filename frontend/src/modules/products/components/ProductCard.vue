@@ -113,6 +113,7 @@ watch(() => props.product.images, () => { imgError.value = false; });
 .product-card {
   display: flex;
   flex-direction: column;
+  height: 100%;
   border-radius: 16px;
   overflow: hidden;
   background: white;
