@@ -1,8 +1,5 @@
 <template>
-  <div
-    ref="rootRef"
-    class="card-list-root"
-  >
+  <div>
     <RecycleScroller
       v-if="grid > 0 && items.length"
       v-slot="{ item, index }"
@@ -33,6 +30,8 @@ const CARD_TITLE_LINE_HEIGHT = 26;
 
 const emit = defineEmits<{(evt: 'scroll-end'): void;}>();
 
+const CONTAINER_PADDING = 32;
+
 const props = withDefaults(defineProps<{
   items: any[];
   buffer?: number;
@@ -42,6 +41,7 @@ const props = withDefaults(defineProps<{
   verticalMargin?: number;
   horizontalMargin?: number;
   titleLinesCount?: number;
+  filterPanelWidth?: number;
 }>(), {
   buffer: 680,
   keyField: 'id',
@@ -50,21 +50,17 @@ const props = withDefaults(defineProps<{
   verticalMargin: 8,
   horizontalMargin: 8,
   titleLinesCount: 1,
+  filterPanelWidth: 0,
 });
 
-const rootRef = ref<HTMLElement | null>(null);
-
-const grid = useGrid(rootRef, props.cardsWidth, props.horizontalMargin * 2);
+const offset = computed(() => props.filterPanelWidth + CONTAINER_PADDING);
+const grid = useGrid(offset, props.cardsWidth, props.horizontalMargin * 2);
 
 const rowHeight = computed(() =>
   CARD_TITLE_LINE_HEIGHT * (props.titleLinesCount - 1) + props.cardsHeight + props.verticalMargin * 2);
 </script>
 
 <style lang="scss" scoped>
-.card-list-root {
-  width: 100%;
-}
-
 :deep() {
   .card-list-item {
     &:hover {

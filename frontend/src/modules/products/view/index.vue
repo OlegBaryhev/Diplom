@@ -9,6 +9,7 @@
         :class="{ 'items--cards': viewMode === 'cards' }"
         :cards-mode="viewMode === 'cards'"
         :disable-filter-button="isEqual(temporaryFilters, filters)"
+        @update:filter-open="filterIsOpen = $event"
         :disable-clear-button="checkDisableClear(temporaryFilters)"
         :actions-list="ACTIONS_LIST"
         :column-headers="TABLE_COLUMN_HEADERS"
@@ -124,6 +125,7 @@
               :vertical-margin="10"
               :horizontal-margin="10"
               :title-lines-count="1"
+              :filter-panel-width="filterIsOpen ? 350 : 70"
               @scroll-end="onCardsScrollEnd"
             >
               <template #default="{ item }">
@@ -213,6 +215,8 @@ const viewMode = ref<ViewMode>(
   (storedMode && VIEW_MODES.some((m) => m.value === storedMode)) ? storedMode : 'table',
 );
 watch(viewMode, (v) => sessionStorage.setItem(SESSION_KEY, v));
+
+const filterIsOpen = ref(true);
 
 const TABLE_COLUMN_HEADERS: ColumnHeader[] = [
   { name: 'Фото', key: 'image' },

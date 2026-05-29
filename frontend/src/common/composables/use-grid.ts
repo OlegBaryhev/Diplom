@@ -1,17 +1,27 @@
 import type { Ref } from 'vue';
 
-export const useGrid = (containerRef: Ref<HTMLElement | null>, cardWidth = 400, gap = 16) => {
-  const gridColumns = ref(1);
+export const useGrid = (offsetRef?: Ref<number>, cardWidth:number = 400, gap:number = 16) => {
+  const sidebarWidth = 88;
+  const gridColumns = ref(0);
 
-  const update = () => {
-    if (!containerRef.value) return;
-    const w = containerRef.value.offsetWidth;
-    gridColumns.value = Math.max(1, Math.floor(w / (cardWidth + gap)));
+  const updateGrid = () => {
+    const offset = offsetRef?.value ?? 0;
+    const containerWidth = document.body.offsetWidth - sidebarWidth - offset;
+    gridColumns.value = Math.max(1, Math.floor(containerWidth / (cardWidth + gap)));
   };
 
-  useResizeObserver(containerRef, update);
+  if (offsetRef) {
+    watch(offsetRef, updateGrid);
+  }
 
-  onMounted(() => nextTick(update));
+  onMounted(() => {
+    updateGrid();
+    window.addEventListener('resize', updateGrid);
+  });
+
+  onUnmounted(() => {
+    window.removeEventListener('resize', updateGrid);
+  });
 
   return gridColumns;
 };

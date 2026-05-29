@@ -207,6 +207,7 @@ const emits = defineEmits<{
   (evt: 'clear-filter'): void;
   (evt: 'handleNoDataButtonClick'): void;
   (evt: 'action', action: any): void;
+  (evt: 'update:filterOpen', value: boolean): void;
 }>();
 
 const sorting = useVModel(props, 'sorting', emits);
@@ -214,6 +215,8 @@ const searchQuery = useVModel(props, 'search', emits);
 
 const isOpen = ref<boolean>(true);
 const slots = useSlots();
+
+watch(isOpen, (v) => emits('update:filterOpen', v), { immediate: true });
 
 watch(
   () => [props.search, props.appliedFilterData, props.activeTab],
