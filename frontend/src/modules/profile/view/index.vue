@@ -24,8 +24,12 @@
         <div class="profile__content h-full flex justify-between items-center">
           <div class="profile__info h-full flex items-center">
             <div class="flex flex-col">
-              <span class="profile__username text-lg-medium"> {{ `${profileData?.name}${profileData?.surname ? ' ' + profileData?.surname : ''}` || 'Пользователь' }}</span>
-              <span class="profile__role text-main-300"> {{ profileData?.role ? 'Администратор' : ( profileData?.role ?? 'Гость') }} </span>
+              <span class="profile__username text-lg-medium">
+                {{ `${profileData?.name}${profileData?.surname ? ' ' + profileData?.surname : ''}` || 'Пользователь' }}
+              </span>
+              <span class="profile__role text-main-300">
+                {{ profileData?.role ? 'Администратор' : ( profileData?.role ?? 'Гость') }}
+              </span>
             </div>
           </div>
           <div class="profile__actions h-full flex items-center">
@@ -54,6 +58,74 @@
         </div>
       </div>
     </article>
+
+    <article
+      v-if="isSuperuser && stats"
+      class="profile__stats"
+    >
+      <h2 class="profile__stats-title">
+        Статистика перерасчетов
+      </h2>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="stat-card__value">{{ stats.total_executions }}</span>
+          <span class="stat-card__label">Всего выполнено</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card__value">{{ stats.total_rules }}</span>
+          <span class="stat-card__label">Правил всего</span>
+        </div>
+        <div class="stat-card stat-card--active">
+          <span class="stat-card__value">{{ stats.active_rules }}</span>
+          <span class="stat-card__label">Активных правил</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card__value">{{ stats.avg_products_affected }}</span>
+          <span class="stat-card__label">Средн. товаров за раз</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card__value">{{ stats.avg_execution_time_ms }} мс</span>
+          <span class="stat-card__label">Средн. время выполн.</span>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <VBarChart
+            title="Выполнений по типу перерасчета"
+            :items="byTypeChartData"
+            bar-color="#3b82f6"
+            :height="200"
+          />
+        </div>
+
+        <div class="chart-card">
+          <VBarChart
+            title="Выполнений по инициатору"
+            :items="byTriggerChartData"
+            bar-color="#8b5cf6"
+            :height="200"
+          />
+        </div>
+
+        <div class="chart-card chart-card--wide">
+          <VLineChart
+            title="Динамика перерасчетов по дням"
+            :items="byDayChartData"
+            line-color="#10b981"
+            :height="180"
+          />
+        </div>
+      </div>
+    </article>
+
+    <div
+      v-else-if="isSuperuser && statsLoading"
+      class="profile__stats-loading"
+    >
+      <VLoader />
+    </div>
   </section>
 
   <EditUserModel
@@ -83,6 +155,9 @@ import { useUser } from '@/stores/user';
 import EditUserModel from '@/modules/profile/components/EditUserModel.vue';
 import { useModals } from '@/stores/modals';
 import AvatarEditorModal from '../components/AvatarEditorModal.vue';
+import { getRecalculationStatisticsRequest } from '@/modules/recalculations/api';
+import VBarChart from '@/common/components/charts/VBarChart.vue';
+import VLineChart from '@/common/components/charts/VLineChart.vue';
 
 const userStore = useUser();
 const modalStore = useModals();
@@ -91,7 +166,49 @@ const EDIT_USER_MODAL_ID = 'edit-user-modal-id';
 const AVATAR_MODAL_ID = 'avatar-editor-modal';
 
 const profileData = computed(() => userStore?.user);
+const isSuperuser = computed(() => profileData.value?.role === 'superuser');
 const saveChangesLoading = ref(false);
+
+const stats = ref<any>(null);
+const statsLoading = ref(false);
+
+const fetchStats = async () => {
+  if (!isSuperuser.value) return;
+  statsLoading.value = true;
+  try {
+    const { data } = await getRecalculationStatisticsRequest();
+    stats.value = data;
+  } catch (err) {
+    console.error(err);
+  } finally {
+    statsLoading.value = false;
+  }
+};
+
+const byTypeChartData = computed(() =>
+  (stats.value?.by_type ?? []).map((item: any) => ({
+    label: item.label,
+    value: item.count,
+  })),
+);
+
+const byTriggerChartData = computed(() =>
+  (stats.value?.by_trigger ?? []).map((item: any) => ({
+    label: item.label,
+    value: item.count,
+  })),
+);
+
+const byDayChartData = computed(() =>
+  (stats.value?.by_day ?? []).map((item: any) => ({
+    label: item.date?.slice(5) ?? '',
+    value: item.count,
+  })),
+);
+
+watch(isSuperuser, (val) => {
+  if (val) fetchStats();
+}, { immediate: true });
 
 const exitFromUser = (): void => userStore.logout();
 
@@ -163,6 +280,80 @@ const onAvatarSaved = async (newUrl: string) => {
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  &__stats {
+    background: theme('colors.white');
+    border-radius: 16px;
+    border: 1px solid theme('colors.main.100');
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  &__stats-title {
+    @apply text-xl-semibold;
+    color: theme('colors.additional.DEFAULT');
+  }
+
+  &__stats-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+  }
+}
+
+.stats-grid {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 20px;
+  background: theme('colors.main.50');
+  border-radius: 12px;
+  min-width: 130px;
+  flex: 1;
+
+  &--active {
+    background: #dcfce7;
+  }
+
+  &__value {
+    @apply text-xl-semibold;
+    color: theme('colors.additional.DEFAULT');
+  }
+
+  &__label {
+    @apply text-xs-regular;
+    color: theme('colors.additional.300');
+  }
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-card {
+  padding: 16px;
+  background: theme('colors.main.50');
+  border-radius: 12px;
+  overflow: hidden;
+
+  &--wide {
+    grid-column: 1 / -1;
   }
 }
 </style>

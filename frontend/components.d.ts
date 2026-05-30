@@ -9,6 +9,8 @@ export {}
 
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
+    ChartsVBarChart: typeof import('./src/common/components/charts/VBarChart.vue')['default']
+    ChartsVLineChart: typeof import('./src/common/components/charts/VLineChart.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     VAdvancedFlexTable: typeof import('./src/common/components/tables/VAdvancedFlexTable.vue')['default']

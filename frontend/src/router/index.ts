@@ -147,6 +147,19 @@ const routes = [
           }],
         },
       },
+      {
+        path: '/recalculations',
+        name: 'recalculations',
+        component: () => import('../modules/recalculations/view/index.vue'),
+        meta: {
+          title: 'Перерасчеты - Система ценообразования "Doge Devices"',
+          requiresAuth: true,
+          breadcrumb: [{
+            to: '',
+            text: 'Главная',
+          }],
+        },
+      },
     ],
   },
 

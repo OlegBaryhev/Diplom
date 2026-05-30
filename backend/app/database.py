@@ -28,6 +28,27 @@ async def create_tables():
         await conn.execute(text(
             "ALTER TABLE products ADD COLUMN IF NOT EXISTS discount INTEGER NOT NULL DEFAULT 0"
         ))
+        await conn.execute(text(
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS cost_price INTEGER"
+        ))
+        await conn.execute(text(
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS stock_quantity INTEGER NOT NULL DEFAULT 0"
+        ))
+        await conn.execute(text(
+            "ALTER TABLE products ADD COLUMN IF NOT EXISTS rating DOUBLE PRECISION NOT NULL DEFAULT 0.0"
+        ))
+        await conn.execute(text(
+            "ALTER TABLE recalculate_history ADD COLUMN IF NOT EXISTS recalculation_type INTEGER"
+        ))
+        await conn.execute(text(
+            "ALTER TABLE recalculate_history ADD COLUMN IF NOT EXISTS trigger_type VARCHAR"
+        ))
+        await conn.execute(text(
+            "ALTER TABLE recalculate_history ADD COLUMN IF NOT EXISTS products_affected_count INTEGER"
+        ))
+        await conn.execute(text(
+            "ALTER TABLE recalculate_history ADD COLUMN IF NOT EXISTS execution_time_ms INTEGER"
+        ))
 
 async def init_logs():
     sql_file = "sql/create_log_triggers.sql"

@@ -20,6 +20,9 @@ class ProductBase(BaseModel):
     category_id: int
     brand_id: int
     discount: int = 0
+    cost_price: Optional[int] = None
+    stock_quantity: int = 0
+    rating: float = 0.0
 
     @field_validator("discount")
     @classmethod

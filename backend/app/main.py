@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
 from fastapi.staticfiles import StaticFiles
-from app.routes import products, category, cart, order, auth_routes, brand, user, analogs, recalculate, recalculate_history, roles
+from app.routes import products, category, cart, order, auth_routes, brand, user, analogs, recalculate, recalculate_history, roles, recalculations
 from app.routes.logs import router as logs_router
 from app.database import create_tables, init_logs
 from app.init_data import init_data
@@ -42,6 +42,7 @@ app.include_router(user.router, prefix="/user", tags=["User"])
 app.include_router(analogs.router, prefix="/analogs", tags=["Analogs"])
 app.include_router(recalculate.router, prefix="/recalculate", tags=["Recalculate"])
 app.include_router(recalculate_history.router, prefix="/recalculate_history", tags=["RecalculateHistory"])
+app.include_router(recalculations.router, prefix="/recalculations", tags=["Recalculations"])
 app.include_router(roles.router, prefix="/roles", tags=["Roles"])
 app.include_router(logs_router, prefix="/logs", tags=["Logs"])
 

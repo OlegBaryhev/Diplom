@@ -1,19 +1,25 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Optional, Dict, Any
 from datetime import datetime
-from typing import Optional, Literal
+
 
 class RecalculateHistoryCreate(BaseModel):
     name: str
-    description: Optional[str]
+    description: Optional[str] = None
     recalculated_by: str
+    recalculation_type: Optional[int] = None
+    trigger_type: Optional[str] = None
     parameters: Dict[str, Any]
+    products_affected_count: Optional[int] = None
+    execution_time_ms: Optional[int] = None
+
 
 class RecalculateHistoryRead(RecalculateHistoryCreate):
     id: int
     recalculated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
 
 class PriceRecalculationFilter(BaseModel):
     search: Optional[str] = None
@@ -23,23 +29,26 @@ class PriceRecalculationFilter(BaseModel):
     category_id: Optional[int] = None
     brand_id: Optional[int] = None
 
+
 class RelativePriceUpdateRequest(PriceRecalculationFilter):
     value: float
-    type: Literal["rubles", "percent"]
+    type: str
     name: str
-    description: Optional[str]
+    description: Optional[str] = None
     recalculated_by: str
+
 
 class FixedPriceUpdateRequest(PriceRecalculationFilter):
     value: int
     name: str
-    description: Optional[str]
+    description: Optional[str] = None
     recalculated_by: str
+
 
 class AverageRelativePriceUpdateRequest(PriceRecalculationFilter):
     value: float
-    type: Literal["rubles", "percent"]
+    type: str
     offset: bool
     name: str
-    description: Optional[str]
+    description: Optional[str] = None
     recalculated_by: str

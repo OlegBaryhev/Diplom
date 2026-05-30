@@ -1,197 +1,447 @@
 <template>
   <VModalWrap
     :modal-id="modalId"
-    title="Быстрый перерасчет цен"
-    @closed="internalFile = null"
+    title="Управление перерасчетами"
   >
     <template #modal-body>
-      <div class="flex flex-col gap-5 w-full min-w-[500px] h-full min-h-[600px]">
-        <div class="flex flex-col gap-2">
-          <h2 class="text-additional-300 text-base-regular">Форма пересчета</h2>
+      <div class="recalc-modal">
+        <div class="recalc-modal__toolbar">
           <VInput
-            v-model="formModel.name"
-            label="Наименование"
+            v-model="searchQuery"
+            class="recalc-modal__search"
+            label="Поиск"
+            sm
             secondary
+          />
+
+          <VMultiselect
+            v-model="filterType"
+            class="recalc-modal__filter"
+            :options="typeFilterOptions"
+            item-name="label"
+            primary-key="value"
+            label="Тип"
             sm
-            :error="v$.formModel.name.$errors?.[0]?.$message || dateApiError"
-            @update:model-value="dateApiError = ''"
+            clearable
           />
-          <VInput
-            v-model="formModel.description"
-            label="Описание"
-            :error="v$.formModel.description.$errors?.[0]?.$message"
-            data-test="description"
+
+          <VMultiselect
+            v-model="filterTrigger"
+            class="recalc-modal__filter"
+            :options="TRIGGER_TYPES"
+            item-name="label"
+            primary-key="value"
+            label="Инициатор"
+            sm
+            clearable
           />
+
+          <VBtn
+            v-if="userHasPermission(Permissions.Write)"
+            small
+            @click="openCreate"
+          >
+            Создать
+          </VBtn>
         </div>
 
-        <h3 class="text-sm text-additional-300 text-base-regular">Тип пересчета цен</h3>
-        <div class="flex gap-3 flex-col">
-          <VRadio
-            v-model="modeValue"
-            :value="0"
-            name="basic"
-            label="Относительно текущей цены"
-          />
-
-          <VRadio
-            v-model="modeValue"
-            :value="1"
-            name="basic"
-            label="Приведение к значению"
-          />
-
-          <VRadio
-            v-model="modeValue"
-            :value="2"
-            name="basic"
-            label="Относительно усредненной цены"
-          />
+        <div
+          v-if="loading"
+          class="recalc-modal__loading"
+        >
+          <VLoader />
         </div>
 
-        <div class="flex flex-col gap-4 pt-4">
-          <h2 class="text-additional-300 text-base-regular">Основная форма пересчета</h2>
-          <VInput
-            v-model="formModel.value"
-            class="w-[50%]"
-            label="Значение"
-            mask="number"
-            sm
-          />
+        <div
+          v-else-if="!recalculations.length"
+          class="recalc-modal__empty"
+        >
+          Перерасчеты не найдены. Нажмите «Создать» для добавления.
+        </div>
 
-          <div
-            class="flex gap-4"
+        <div
+          v-else
+          class="recalc-modal__table-wrap"
+        >
+          <table class="recalc-table">
+            <thead>
+              <tr>
+                <th>Наименование</th>
+                <th>Тип</th>
+                <th>Инициатор</th>
+                <th>Приоритет</th>
+                <th>Статус</th>
+                <th>Обновлен</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="item in recalculations"
+                :key="item.id"
+                class="recalc-table__row"
+                :class="{ 'recalc-table__row--active': detailedItem?.id === item.id }"
+                @click="detailedItem = item"
+              >
+                <td class="recalc-table__cell recalc-table__cell--name">
+                  {{ item.name }}
+                </td>
+                <td class="recalc-table__cell">
+                  <span class="type-chip">{{ RECALCULATION_TYPE_LABELS[item.recalculation_type] ?? '—' }}</span>
+                </td>
+                <td class="recalc-table__cell">
+                  {{ TRIGGER_TYPE_LABELS[item.trigger_type] ?? '—' }}
+                </td>
+                <td class="recalc-table__cell recalc-table__cell--center">
+                  {{ item.priority }}
+                </td>
+                <td class="recalc-table__cell">
+                  <span
+                    class="status-chip"
+                    :class="item.is_active ? 'status-chip--active' : 'status-chip--off'"
+                  >
+                    {{ item.is_active ? 'Активен' : 'Выкл' }}
+                  </span>
+                </td>
+                <td class="recalc-table__cell">
+                  {{ formatDate(item.updated_at) }}
+                </td>
+                <td
+                  class="recalc-table__cell recalc-table__cell--actions"
+                  @click.stop
+                >
+                  <button
+                    v-if="userHasPermission(Permissions.Recalculate)"
+                    class="recalc-table__action-btn"
+                    title="Выполнить"
+                    :disabled="executingId === item.id"
+                    @click="executeItem(item)"
+                  >
+                    <VIcon
+                      name="calculator"
+                      class="w-4 h-4"
+                    />
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div
+          v-if="total > recalculations.length"
+          class="recalc-modal__load-more"
+        >
+          <VBtn
+            outlined
+            small
+            :loading="loadingMore"
+            @click="loadMore"
           >
-            <VRadio
-              v-model="formModel.negative"
-              :value="false"
-              name="negative"
-              label="Увеличить цену"
-            />
-
-            <VRadio
-              v-model="formModel.negative"
-              :value="true"
-              name="negative"
-              label="Уменьшить цену"
-            />
-          </div>
-
-          <VCheckbox
-            v-if="modeValue === 2"
-            v-model="formModel.offset"
-            label="Применить смещение"
-            :value="true"
-          />
-
-          <template
-            v-if="modeValue === 0 || modeValue === 2"
-          >
-            <h3 class="text-sm text-additional-300 text-base-regular">Тип установки значения</h3>
-            <div
-              class="flex gap-4"
-            >
-              <VRadio
-                v-model="formModel.type"
-                value="rubles"
-                name="type"
-                label="Рубли"
-              />
-
-              <VRadio
-                v-model="formModel.type"
-                value="percent"
-                name="type"
-                label="Проценты"
-              />
-            </div>
-          </template>
+            Загрузить ещё
+          </VBtn>
         </div>
       </div>
     </template>
 
     <template #modal-footer>
-      <div class="space-x-4">
-        <VBtn
-          text="Отменить"
-          outlined
-          small
-          data-test="cancel"
-          @click="modalStore.close(modalId)"
-        />
-
-        <VBtn
-          text="Подтвердить"
-          small
-          data-test="submit"
-          @click="emit('confirm')"
-        />
-      </div>
+      <VBtn
+        text="Закрыть"
+        outlined
+        small
+        @click="modalStore.close(modalId)"
+      />
     </template>
   </VModalWrap>
+
+  <SidePanel
+    v-if="detailedItem || isCreating"
+    :item="detailedItem"
+    :fetch-items="fetchRecalculations"
+    @close="onSidePanelClose"
+    @delete="onDelete"
+    @executed="onExecuted"
+  />
 </template>
 
 <script lang="ts" setup>
-import { required, helpers } from '@vuelidate/validators';
-import { useVuelidate } from '@vuelidate/core';
-import {
-  ERRORS,
-} from '@/common/validations';
-
-import {
-  recalculateRelativeCurrentPrice,
-  recalculateFixedValue,
-  recalculateAverageRelativePrice,
-} from '@/modules/recalculate_history/api';
-
-import { MAX_FLOAT_VALUE } from '@/consts';
+import { debounce } from 'lodash';
+import { format, parseISO } from 'date-fns';
 import { useModals } from '@/stores/modals';
-
-const modalStore = useModals();
+import { Permissions } from '@/common/types/permissions';
+import { userHasPermission } from '@/common/utils/permissions';
+import {
+  searchRecalculationsRequest,
+  executeRecalculationRequest,
+} from '@/modules/recalculations/api';
+import {
+  RECALCULATION_TYPES,
+  RECALCULATION_TYPE_LABELS,
+  TRIGGER_TYPES,
+  TRIGGER_TYPE_LABELS,
+} from '@/modules/recalculations/types';
+import type { Recalculation } from '@/modules/recalculations/types';
+import SidePanel from '@/modules/recalculations/components/SidePanel.vue';
+import { TABLE_ITEM_COUNT_TO_FETCH } from '@/consts';
 
 const props = withDefaults(defineProps<{
-  file: File | null;
-  accept: string;
   modalId?: string;
 }>(), {
   modalId: 'recalculateModal',
 });
 
-const formModel = ref<{
-  name: string,
-  description: string,
-  type?: 'rubles' | 'percent',
-} | null>({});
+const modalStore = useModals();
 
-const modeValue = ref(0);
+const searchQuery = ref('');
+const filterType = ref<any>(null);
+const filterTrigger = ref<any>(null);
+const recalculations = ref<Recalculation[]>([]);
+const total = ref(0);
+const page = ref(1);
+const loading = ref(false);
+const loadingMore = ref(false);
+const detailedItem = ref<Recalculation | null>(null);
+const isCreating = ref(false);
+const executingId = ref<number | null>(null);
+
+const typeFilterOptions = [
+  { value: null, label: 'Все типы' },
+  ...RECALCULATION_TYPES,
+];
+
+const buildParams = (p = 1) => ({
+  ...(searchQuery.value && { search: searchQuery.value }),
+  ...(filterType.value?.value && { recalculation_type: filterType.value.value }),
+  ...(filterTrigger.value?.value && { trigger_type: filterTrigger.value.value }),
+  page: p,
+  page_size: TABLE_ITEM_COUNT_TO_FETCH,
+  sort_by: 'priority_desc',
+});
+
+const fetchRecalculations = debounce(async () => {
+  loading.value = true;
+  page.value = 1;
+  try {
+    const { data } = await searchRecalculationsRequest(buildParams(1));
+    recalculations.value = data?.items ?? [];
+    total.value = data?.total ?? 0;
+  } catch (err) {
+    console.error(err);
+  } finally {
+    loading.value = false;
+  }
+}, 300);
+
+const loadMore = async () => {
+  loadingMore.value = true;
+  page.value += 1;
+  try {
+    const { data } = await searchRecalculationsRequest(buildParams(page.value));
+    recalculations.value = [...recalculations.value, ...(data?.items ?? [])];
+    total.value = data?.total ?? 0;
+  } catch (err) {
+    console.error(err);
+    page.value -= 1;
+  } finally {
+    loadingMore.value = false;
+  }
+};
+
+const openCreate = () => {
+  detailedItem.value = null;
+  isCreating.value = true;
+};
+
+const onSidePanelClose = () => {
+  detailedItem.value = null;
+  isCreating.value = false;
+};
+
+const onDelete = () => {
+  detailedItem.value = null;
+  isCreating.value = false;
+  fetchRecalculations();
+};
+
+const onExecuted = () => {
+  fetchRecalculations();
+};
+
+const executeItem = async (item: Recalculation) => {
+  executingId.value = item.id;
+  try {
+    await executeRecalculationRequest(item.id);
+    fetchRecalculations();
+  } catch (err) {
+    console.error(err);
+  } finally {
+    executingId.value = null;
+  }
+};
+
+const formatDate = (dateStr: string | null | undefined): string => {
+  if (!dateStr) return '—';
+  try {
+    return format(parseISO(dateStr), 'dd.MM.yyyy');
+  } catch {
+    return dateStr;
+  }
+};
 
 watch(
-  () => modeValue.value,
-  (val) => {
-    formModel.value = {
-      name: formModel.value?.name ?? '',
-      description: formModel.value?.description ?? '',
-      value: formModel.value?.value ?? 0,
-      negative: formModel.value?.negative ?? false,
-      ...(val !== 1 && { type: formModel.value?.type ?? 'rubles' }),
-    };
-  },
-  { immediate: true },
+  () => [searchQuery.value, filterType.value, filterTrigger.value],
+  () => fetchRecalculations(),
+  { deep: true },
 );
-const validationRules = computed(() => ({
-  formModel: {
-    name: {
-      required: helpers.withMessage(ERRORS.required, required),
-    },
-    description: {
-      required: helpers.withMessage(ERRORS.required, required),
-    },
-  },
-}));
 
-const v$ = useVuelidate(validationRules, { formModel });
+const isOpen = computed(() => modalStore.activeModals.includes(props.modalId));
 
-// eslint-disable-next-line func-call-spacing, no-spaced-func
-const emit = defineEmits<{
-  (evt: 'confirm'): void,
-}>();
+watch(isOpen, (val) => {
+  if (val) fetchRecalculations();
+});
 </script>
+
+<style lang="scss" scoped>
+.recalc-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-height: 400px;
+
+  &__toolbar {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  &__search {
+    flex: 1;
+    min-width: 180px;
+  }
+
+  &__filter {
+    width: 180px;
+    flex-shrink: 0;
+  }
+
+  &__loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+  }
+
+  &__empty {
+    @apply text-sm-regular;
+    color: theme('colors.additional.300');
+    text-align: center;
+    padding: 48px 0;
+  }
+
+  &__table-wrap {
+    overflow-x: auto;
+  }
+
+  &__load-more {
+    display: flex;
+    justify-content: center;
+  }
+}
+
+.recalc-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th {
+    @apply text-xs-medium;
+    text-align: left;
+    color: theme('colors.additional.300');
+    padding: 6px 10px;
+    border-bottom: 1px solid theme('colors.main.100');
+    white-space: nowrap;
+  }
+
+  &__row {
+    cursor: pointer;
+    transition: background 0.1s;
+
+    &:hover,
+    &--active {
+      background: theme('colors.main.50');
+    }
+  }
+
+  &__cell {
+    @apply text-sm-regular;
+    color: theme('colors.black');
+    padding: 8px 10px;
+    border-bottom: 1px solid theme('colors.main.100');
+    white-space: nowrap;
+
+    &--name {
+      font-weight: 500;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    &--center {
+      text-align: center;
+    }
+
+    &--actions {
+      width: 48px;
+    }
+  }
+
+  &__action-btn {
+    padding: 4px;
+    color: theme('colors.additional.300');
+    background: none;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: color 0.1s, background 0.1s;
+
+    &:hover:not(:disabled) {
+      color: theme('colors.main.400');
+      background: theme('colors.main.100');
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.type-chip {
+  @apply text-xs-medium;
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: theme('colors.main.50');
+  color: theme('colors.main.400');
+  white-space: nowrap;
+}
+
+.status-chip {
+  @apply text-xs-medium;
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+
+  &--active {
+    background: #dcfce7;
+    color: #16a34a;
+  }
+
+  &--off {
+    background: #f3f4f6;
+    color: theme('colors.additional.300');
+  }
+}
+</style>

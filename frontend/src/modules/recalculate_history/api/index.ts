@@ -1,10 +1,10 @@
 import api from '@/api';
 import { REMOTE_SERVER_URL } from '@/consts';
-import {
+import type {
   RelativeCurrentPriceRequest,
   FixedValueRequest,
   AverageRelativePriceRequest,
-  PriceRecalculationFilter,
+  RecalculateHistorySearchRequest,
 } from '@/modules/recalculate_history/types';
 
 export const recalculateRelativeCurrentPrice = (data: RelativeCurrentPriceRequest) =>
@@ -16,8 +16,11 @@ export const recalculateFixedValue = (data: FixedValueRequest) =>
 export const recalculateAverageRelativePrice = (data: AverageRelativePriceRequest) =>
   api.post(`${REMOTE_SERVER_URL}/recalculate/average_relative_price`, data);
 
-export const getRecalculateHistorysRequest = (data: PriceRecalculationFilter & { page?: number; page_size?: number }) =>
+export const getRecalculateHistorysRequest = (data: RecalculateHistorySearchRequest) =>
   api.post(`${REMOTE_SERVER_URL}/recalculate_history/search`, data);
 
-export const exportRecalculateHistorysRequest = (data: PriceRecalculationFilter) =>
+export const deleteRecalculateHistoryRequest = (id: number) =>
+  api.delete(`${REMOTE_SERVER_URL}/recalculate_history/${id}`);
+
+export const exportRecalculateHistorysRequest = (data: FormData) =>
   api.post(`${REMOTE_SERVER_URL}/recalculate_history/export/xlsx`, data, { responseType: 'blob' });
