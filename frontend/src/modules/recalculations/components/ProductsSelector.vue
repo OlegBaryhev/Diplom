@@ -1,19 +1,6 @@
 <!-- eslint-disable no-lonely-if -->
 <template>
   <div class="products-selector">
-    <div class="products-selector__tabs">
-      <button
-        v-for="tab in TABS"
-        :key="tab.value"
-        class="products-selector__tab"
-        :class="{ 'products-selector__tab--active': activeTab === tab.value }"
-        type="button"
-        @click="activeTab = tab.value"
-      >
-        {{ tab.label }}
-      </button>
-    </div>
-
     <div class="products-selector__selection-type">
       <VRadio
         v-model="internalSelectionType"
@@ -45,18 +32,30 @@
     </template>
 
     <template v-else-if="internalSelectionType === 'groups'">
+      <div class="products-selector__tabs">
+        <button
+          v-for="tab in GROUP_TABS"
+          :key="tab.value"
+          class="products-selector__tab"
+          :class="{ 'products-selector__tab--active': activeTab === tab.value }"
+          type="button"
+          @click="activeTab = tab.value"
+        >
+          {{ tab.label }}
+        </button>
+      </div>
+
       <div
         v-if="activeTab === 'categories'"
         class="products-selector__list"
       >
-        <div class="products-selector__search">
-          <VInput
-            v-model="categorySearch"
-            label="Поиск категорий"
-            sm
-            secondary
-          />
-        </div>
+        <VInput
+          v-model="categorySearch"
+          label="Поиск"
+          sm
+          secondary
+          class="mb-3"
+        />
         <div class="products-selector__items">
           <label
             v-for="cat in filteredCategories"
@@ -69,8 +68,14 @@
               :checked="selectedCategoryIds.has(cat.id)"
               @change="toggleCategory(cat.id)"
             >
-            <span>{{ cat.name }}</span>
+            <span class="products-selector__item-name">{{ cat.name }}</span>
           </label>
+          <p
+            v-if="!filteredCategories.length && !loading"
+            class="products-selector__empty"
+          >
+            Ничего не найдено
+          </p>
         </div>
       </div>
 
@@ -78,14 +83,13 @@
         v-else-if="activeTab === 'brands'"
         class="products-selector__list"
       >
-        <div class="products-selector__search">
-          <VInput
-            v-model="brandSearch"
-            label="Поиск брендов"
-            sm
-            secondary
-          />
-        </div>
+        <VInput
+          v-model="brandSearch"
+          label="Поиск"
+          sm
+          secondary
+          class="mb-3"
+        />
         <div class="products-selector__items">
           <label
             v-for="brand in filteredBrands"
@@ -98,41 +102,42 @@
               :checked="selectedBrandIds.has(brand.id)"
               @change="toggleBrand(brand.id)"
             >
-            <span>{{ brand.name }}</span>
+            <span class="products-selector__item-name">{{ brand.name }}</span>
           </label>
+          <p
+            v-if="!filteredBrands.length && !loading"
+            class="products-selector__empty"
+          >
+            Ничего не найдено
+          </p>
         </div>
       </div>
     </template>
 
     <template v-else-if="internalSelectionType === 'individual'">
       <div class="products-selector__list">
-        <div class="products-selector__search">
-          <VInput
-            v-model="productSearch"
-            label="Поиск товаров"
-            sm
-            secondary
-          />
-        </div>
+        <VInput
+          v-model="productSearch"
+          label="Поиск товаров"
+          sm
+          secondary
+          class="mb-3"
+        />
 
-        <div class="products-selector__master-row">
-          <button
-            type="button"
-            class="products-selector__master-checkbox-btn"
-            :title="masterTitle"
-            @click="toggleMaster"
+        <label class="products-selector__item products-selector__item--master">
+          <input
+            type="checkbox"
+            class="products-selector__checkbox"
+            :checked="masterState === 'all'"
+            :indeterminate="masterState === 'partial'"
+            @change="toggleMaster"
           >
-            <span
-              class="products-selector__master-icon"
-              :class="`products-selector__master-icon--${masterState}`"
-            />
-            <span class="products-selector__master-label">{{ masterTitle }}</span>
-          </button>
-
-          <span class="products-selector__mode-badge">
-            {{ individualMode === 'include' ? 'include' : 'exclude' }}
+          <span class="products-selector__item-name products-selector__item-name--bold">
+            Выбрать все
           </span>
-        </div>
+        </label>
+
+        <div class="products-selector__divider" />
 
         <div class="products-selector__items">
           <label
@@ -146,10 +151,10 @@
               :checked="isProductChecked(product.id)"
               @change="toggleProduct(product.id)"
             >
-            <span class="products-selector__product-name">{{ product.name }}</span>
+            <span class="products-selector__item-name">{{ product.name }}</span>
             <span
               v-if="product.category"
-              class="products-selector__product-meta"
+              class="products-selector__item-meta"
             >{{ product.category.name }}</span>
           </label>
 
@@ -178,15 +183,14 @@ const emit = defineEmits<{
   (evt: 'update:modelValue', val: ProductSelection): void;
 }>();
 
-const TABS = [
-  { value: 'products', label: 'Товары' },
+const GROUP_TABS = [
   { value: 'categories', label: 'Категории' },
   { value: 'brands', label: 'Бренды' },
 ] as const;
 
-type TabValue = typeof TABS[number]['value'];
+type GroupTab = typeof GROUP_TABS[number]['value'];
 
-const activeTab = ref<TabValue>('products');
+const activeTab = ref<GroupTab>('categories');
 const loading = ref(false);
 const productSearch = ref('');
 const categorySearch = ref('');
@@ -222,13 +226,17 @@ const fetchData = async () => {
 
 fetchData();
 
-const filteredProducts = computed(() =>
-  allProducts.value.filter((p) =>
-    !productSearch.value || p.name.toLowerCase().includes(productSearch.value.toLowerCase())));
+const filteredProducts = computed(() => allProducts.value.filter(
+  (p) => !productSearch.value || p.name.toLowerCase().includes(productSearch.value.toLowerCase()),
+));
 
-const filteredCategories = computed(() => allCategories.value.filter((c) => !categorySearch.value || c.name.toLowerCase().includes(categorySearch.value.toLowerCase())));
+const filteredCategories = computed(() => allCategories.value.filter(
+  (c) => !categorySearch.value || c.name.toLowerCase().includes(categorySearch.value.toLowerCase()),
+));
 
-const filteredBrands = computed(() => allBrands.value.filter((b) => !brandSearch.value || b.name.toLowerCase().includes(brandSearch.value.toLowerCase())));
+const filteredBrands = computed(() => allBrands.value.filter(
+  (b) => !brandSearch.value || b.name.toLowerCase().includes(brandSearch.value.toLowerCase()),
+));
 
 const isProductChecked = (id: number): boolean => {
   if (individualMode.value === 'include') return individualIds.value.has(id);
@@ -238,17 +246,9 @@ const isProductChecked = (id: number): boolean => {
 const masterState = computed((): 'all' | 'none' | 'partial' => {
   const ids = filteredProducts.value.map((p) => p.id);
   if (!ids.length) return 'none';
-  const allChecked = ids.every((id) => isProductChecked(id));
-  if (allChecked) return 'all';
-  const noneChecked = ids.every((id) => !isProductChecked(id));
-  if (noneChecked) return 'none';
+  if (ids.every((id) => isProductChecked(id))) return 'all';
+  if (ids.every((id) => !isProductChecked(id))) return 'none';
   return 'partial';
-});
-
-const masterTitle = computed(() => {
-  if (masterState.value === 'all') return 'Все выбраны';
-  if (masterState.value === 'none') return 'Ничего не выбрано';
-  return 'Выбраны некоторые';
 });
 
 const emitChange = () => {
@@ -261,7 +261,10 @@ const emitChange = () => {
   });
 };
 
-const onSelectionTypeChange = () => {
+const onSelectionTypeChange = (val: SelectionType) => {
+  if (val === 'groups') {
+    activeTab.value = 'categories';
+  }
   emitChange();
 };
 
@@ -279,17 +282,14 @@ const toggleProduct = (id: number) => {
         individualIds.value = new Set();
       }
     }
-  } else {
-    // eslint-disable-next-line no-lonely-if
-    if (wasChecked) {
-      individualIds.value.add(id);
-      if (allIds.every((i) => individualIds.value.has(i))) {
-        individualMode.value = 'include';
-        individualIds.value = new Set();
-      }
-    } else {
-      individualIds.value.delete(id);
+  } else if (wasChecked) {
+    individualIds.value.add(id);
+    if (allIds.every((i) => individualIds.value.has(i))) {
+      individualMode.value = 'include';
+      individualIds.value = new Set();
     }
+  } else {
+    individualIds.value.delete(id);
   }
 
   emitChange();
@@ -343,28 +343,6 @@ watch(
   flex-direction: column;
   gap: 12px;
 
-  &__tabs {
-    display: flex;
-    gap: 4px;
-    border-bottom: 1px solid theme('colors.main.100');
-  }
-
-  &__tab {
-    @apply text-sm-medium;
-    padding: 6px 12px;
-    color: theme('colors.additional.300');
-    border-bottom: 2px solid transparent;
-    transition: color 0.15s, border-color 0.15s;
-    margin-bottom: -1px;
-    background: none;
-    cursor: pointer;
-
-    &--active {
-      color: theme('colors.main.400');
-      border-bottom-color: theme('colors.main.400');
-    }
-  }
-
   &__selection-type {
     display: flex;
     gap: 16px;
@@ -379,118 +357,73 @@ watch(
     border-radius: 6px;
   }
 
-  &__list {
+  &__tabs {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  &__search {
-    flex-shrink: 0;
-  }
-
-  &__master-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 0;
+    gap: 0;
     border-bottom: 1px solid theme('colors.main.100');
   }
 
-  &__master-checkbox-btn {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-  }
-
-  &__master-icon {
-    width: 16px;
-    height: 16px;
-    border: 2px solid theme('colors.main.300');
-    border-radius: 3px;
-    flex-shrink: 0;
-    position: relative;
-
-    &--all {
-      background: theme('colors.main.400');
-      border-color: theme('colors.main.400');
-
-      &::after {
-        content: '';
-        position: absolute;
-        left: 2px;
-        top: -1px;
-        width: 8px;
-        height: 5px;
-        border-left: 2px solid white;
-        border-bottom: 2px solid white;
-        transform: rotate(-45deg);
-      }
-    }
-
-    &--partial {
-      &::after {
-        content: '';
-        position: absolute;
-        left: 2px;
-        top: 5px;
-        width: 8px;
-        height: 2px;
-        background: theme('colors.main.400');
-      }
-    }
-  }
-
-  &__master-label {
+  &__tab {
     @apply text-sm-medium;
-    color: theme('colors.additional.DEFAULT');
+    padding: 6px 14px;
+    color: theme('colors.additional.300');
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    background: none;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+
+    &--active {
+      color: theme('colors.main.400');
+      border-bottom-color: theme('colors.main.400');
+    }
   }
 
-  &__mode-badge {
-    @apply text-xs-medium;
-    margin-left: auto;
-    padding: 2px 8px;
-    border-radius: 4px;
-    background: theme('colors.main.50');
-    color: theme('colors.main.400');
+  &__list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__divider {
+    height: 1px;
+    background: theme('colors.main.100');
+    margin: 4px 0;
   }
 
   &__items {
-    max-height: 240px;
+    max-height: 220px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    padding-right: 4px;
   }
 
   &__item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 6px 8px;
-    border-radius: 4px;
+    gap: 10px;
+    padding: 7px 4px;
     cursor: pointer;
+    border-radius: 4px;
     transition: background 0.1s;
 
     &:hover {
       background: theme('colors.main.50');
     }
+
+    &--master {
+      padding: 6px 4px 8px;
+    }
   }
 
   &__checkbox {
-    width: 16px;
-    height: 16px;
-    cursor: pointer;
+    width: 15px;
+    height: 15px;
     flex-shrink: 0;
+    cursor: pointer;
     accent-color: theme('colors.main.400');
   }
 
-  &__product-name {
+  &__item-name {
     @apply text-sm-regular;
     color: theme('colors.black');
     flex: 1;
@@ -498,9 +431,13 @@ watch(
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+
+    &--bold {
+      @apply text-sm-medium;
+    }
   }
 
-  &__product-meta {
+  &__item-meta {
     @apply text-xs-regular;
     color: theme('colors.additional.300');
     flex-shrink: 0;
@@ -510,7 +447,7 @@ watch(
     @apply text-sm-regular;
     color: theme('colors.additional.300');
     text-align: center;
-    padding: 16px 0;
+    padding: 12px 0;
   }
 }
 </style>

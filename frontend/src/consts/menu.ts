@@ -92,9 +92,21 @@ export const VERTICAL_MENU: RouteMenu[] = [
   },
   {
     id: 8,
-    name: 'История перерасчетов',
-    svg_name: 'clock-thick',
-    routeName: 'recalculate_history',
+    name: 'Перерасчеты',
+    svg_name: 'price-calculating',
+    routeName: 'recalculations',
+    submenu: [
+      {
+        id: 18,
+        name: 'Управление правилами',
+        routeName: 'recalculations',
+      },
+      {
+        id: 19,
+        name: 'История перерасчетов',
+        routeName: 'recalculate_history',
+      },
+    ],
   },
   {
     id: 9,

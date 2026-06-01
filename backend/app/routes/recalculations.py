@@ -356,7 +356,7 @@ async def execute_recalculation(
     if not recalc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Не найдено")
 
-    stats = await _execute_recalculation_logic(session, recalc, current_user.username)
+    stats = await _execute_recalculation_logic(session, recalc, current_user.email)
     return {"success": True, **stats}
 
 

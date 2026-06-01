@@ -72,10 +72,21 @@
     <SidePanel
       v-if="detailedItem || isItemBeingAdded"
       :item="detailedItem"
-      :fetch-items="fetchRecalculations"
+      :fetch-items="refetchRecalculations"
       @close="onClose"
-      @delete="onDelete"
-      @executed="fetchRecalculations"
+      @delete="onDeleteRequest"
+      @executed="refetchRecalculations"
+    />
+
+    <VConfirmationModal
+      id="removeRecalculation"
+      :title="itemToDelete?.name
+        ? `Удалить правило «${itemToDelete.name}»?`
+        : 'Удалить правило?'"
+      text="Правило будет удалено без возможности восстановления"
+      confirmation-text="Удалить"
+      :async-confirmation-func="confirmDelete"
+      @closed="itemToDelete = null"
     />
   </div>
 </template>
@@ -83,10 +94,11 @@
 <script setup lang="ts">
 import { debounce, isEqual, cloneDeep } from 'lodash';
 import { watch } from 'vue';
-import { searchRecalculationsRequest } from '../api';
+import { searchRecalculationsRequest, deleteRecalculationRequest } from '../api';
 import { TABLE_ITEM_COUNT_TO_FETCH } from '@/consts';
 import type { Recalculation } from '../types';
 import { RECALCULATION_TYPES, TRIGGER_TYPES } from '../types';
+import { useModals } from '@/stores/modals';
 
 import TableBody from '../components/TableBody.vue';
 import SidePanel from '../components/SidePanel.vue';
@@ -128,9 +140,11 @@ const DEFAULT_FILTERS = {
   is_active: null as any,
 };
 
+const modalStore = useModals();
 const searchQuery = ref<string>('');
 const detailedItem = ref<Recalculation | null>(null);
 const isItemBeingAdded = ref(false);
+const itemToDelete = ref<Recalculation | null>(null);
 const sorting = ref<any>(SORTING_OPTIONS[0]);
 const temporaryFilters = ref(cloneDeep(DEFAULT_FILTERS));
 const filters = ref(cloneDeep(DEFAULT_FILTERS));
@@ -146,14 +160,19 @@ const checkDisableClear = (obj: any) =>
 const buildParams = (p = 1) => ({
   ...(searchQuery.value && { search: searchQuery.value }),
   ...(sorting.value?.value && { sort_by: sorting.value.value }),
-  ...(filters.value.recalculation_type?.value && { recalculation_type: filters.value.recalculation_type.value }),
+  ...(filters.value.recalculation_type?.value && {
+    recalculation_type: filters.value.recalculation_type.value,
+  }),
   ...(filters.value.trigger_type?.value && { trigger_type: filters.value.trigger_type.value }),
-  ...(filters.value.is_active?.value !== null && filters.value.is_active?.value !== undefined && { is_active: filters.value.is_active.value }),
+  ...(filters.value.is_active?.value !== null
+    && filters.value.is_active?.value !== undefined && {
+    is_active: filters.value.is_active.value,
+  }),
   page: p,
   page_size: TABLE_ITEM_COUNT_TO_FETCH,
 });
 
-const fetchRecalculations = debounce(async () => {
+const refetchRecalculations = async (): Promise<void> => {
   recalculationsLoading.value = true;
   page.value = 1;
   try {
@@ -165,7 +184,9 @@ const fetchRecalculations = debounce(async () => {
   } finally {
     recalculationsLoading.value = false;
   }
-}, 300);
+};
+
+const fetchRecalculations = debounce(refetchRecalculations, 300);
 
 const fetchMoreRecalculations = async (): Promise<void> => {
   try {
@@ -183,20 +204,26 @@ const onClose = () => {
   isItemBeingAdded.value = false;
 };
 
-const onDelete = () => {
-  detailedItem.value = null;
-  isItemBeingAdded.value = false;
+const onDeleteRequest = (item: Recalculation) => {
+  itemToDelete.value = item;
+  modalStore.open('removeRecalculation');
+};
+
+const confirmDelete = async () => {
+  if (!itemToDelete.value) return;
+  await deleteRecalculationRequest(itemToDelete.value.id);
+  await refetchRecalculations();
 };
 
 const clearFilters = async () => {
   temporaryFilters.value = cloneDeep(DEFAULT_FILTERS);
   filters.value = cloneDeep(DEFAULT_FILTERS);
-  await fetchRecalculations();
+  await refetchRecalculations();
 };
 
 const acceptFilters = async () => {
   filters.value = cloneDeep(temporaryFilters.value);
-  await fetchRecalculations();
+  await refetchRecalculations();
 };
 
 watch(
@@ -205,7 +232,7 @@ watch(
   { deep: true },
 );
 
-fetchRecalculations();
+refetchRecalculations();
 </script>
 
 <style scoped lang="scss">
@@ -233,9 +260,9 @@ fetchRecalculations();
     }
 
     &:nth-child(5) {
-      min-width: 100px;
-      width: 100%;
-      max-width: 140px;
+      min-width: 80px;
+      width: 80px;
+      max-width: 80px;
       padding-left: 0;
       padding-right: 24px;
     }
@@ -249,20 +276,13 @@ fetchRecalculations();
     }
 
     &:nth-child(7) {
-      min-width: 90px;
-      width: 90px;
-      padding-left: 0;
-      padding-right: 24px;
-    }
-
-    &:nth-child(8) {
       min-width: 130px;
       width: 130px;
       padding-left: 0;
       padding-right: 12px;
     }
 
-    &:nth-child(9) {
+    &:nth-child(8) {
       min-width: 80px;
       width: 100%;
       max-width: 80px;

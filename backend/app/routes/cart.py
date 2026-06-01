@@ -136,8 +136,18 @@ async def add_to_cart(
         session.add(existing)
 
     await session.commit()
-    await session.refresh(existing)
-    return existing
+
+    result_with_relations = await session.execute(
+        select(CartItem)
+        .options(
+            selectinload(CartItem.product)
+            .selectinload(Product.category),
+            selectinload(CartItem.product)
+            .selectinload(Product.brand),
+        )
+        .where(CartItem.user_id == user.id, CartItem.product_id == item.product_id)
+    )
+    return result_with_relations.scalar_one()
 
 @router.put("/getcart/{cart_item_id}", response_model=CartItemRead)
 async def update_cart_item_by_id(

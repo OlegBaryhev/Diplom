@@ -243,17 +243,20 @@
             :error="v$.formModel.name.$errors?.[0]?.$message"
           />
 
-          <VInput
-            v-model="formModel.description"
-            tag="textarea"
-            input-classes="resize-none"
-            label="Описание"
-            optional
-            secondary
-            sm
-            class="mt-5"
-            :max-length="300"
-          />
+          <div class="auto-textarea mt-7">
+            <label class="auto-textarea__label">
+              Описание
+              <span class="auto-textarea__optional">(необязательно)</span>
+            </label>
+            <textarea
+              ref="descriptionRef"
+              v-model="formModel.description"
+              class="auto-textarea__input"
+              rows="3"
+              maxlength="300"
+              @input="growDescription"
+            />
+          </div>
 
           <VMultiselect
             v-model="formModel.recalculation_type"
@@ -262,7 +265,7 @@
             primary-key="value"
             label="Тип перерасчета"
             sm
-            class="mt-5"
+            class="mt-7"
             :error="v$.formModel.recalculation_type.$errors?.[0]?.$message"
             @update:model-value="onTypeChange"
           />
@@ -273,17 +276,17 @@
             mask="number"
             secondary
             sm
-            class="mt-5"
+            class="mt-7"
           />
 
           <VCheckbox
             v-model="formModel.is_active"
             label="Активен"
             :value="true"
-            class="mt-5"
+            class="mt-7"
           />
 
-          <h3 class="form-section-title mt-6">
+          <h3 class="form-section-title mt-7">
             Инициатор запуска
           </h3>
 
@@ -294,21 +297,20 @@
             primary-key="value"
             label="Тип инициатора"
             sm
-            class="mt-2"
           />
 
-          <template v-if="formModel.trigger_type?.value === 'schedule' || formModel.trigger_type === 'schedule'">
+          <template v-if="triggerTypeValue === 'schedule'">
             <VInput
               v-model="formModel.trigger_config.cron"
               label="Cron-выражение (напр. 0 0 * * *)"
               secondary
               sm
-              class="mt-5"
+              class="mt-7"
               optional
             />
           </template>
 
-          <template v-if="formModel.trigger_type?.value === 'event' || formModel.trigger_type === 'event'">
+          <template v-if="triggerTypeValue === 'event'">
             <VMultiselect
               v-model="formModel.trigger_config.event_type"
               :options="EVENT_TYPES"
@@ -316,326 +318,322 @@
               primary-key="value"
               label="Тип события"
               sm
-              class="mt-5"
+              class="mt-7"
               optional
             />
           </template>
 
-          <h3 class="form-section-title mt-6">
-            Параметры перерасчета
-          </h3>
+          <template v-if="currentType !== null">
+            <h3 class="form-section-title mt-7">
+              Параметры перерасчета
+            </h3>
 
-          <template v-if="currentType === 1">
-            <VInput
-              v-model="formModel.parameters.currency"
-              label="Валюта (напр. USD)"
-              secondary
-              sm
-              class="mt-2"
-            />
-            <VInput
-              v-model="formModel.parameters.old_rate"
-              label="Старый курс"
-              mask="number"
-              secondary
-              sm
-              class="mt-5"
-            />
-            <VInput
-              v-model="formModel.parameters.new_rate"
-              label="Новый курс"
-              mask="number"
-              secondary
-              sm
-              class="mt-5"
-            />
-          </template>
+            <template v-if="currentType === 1">
+              <VInput
+                v-model="formModel.parameters.currency"
+                label="Валюта (напр. USD)"
+                secondary
+                sm
+              />
+              <VInput
+                v-model="formModel.parameters.old_rate"
+                label="Старый курс"
+                mask="number"
+                secondary
+                sm
+                class="mt-7"
+              />
+              <VInput
+                v-model="formModel.parameters.new_rate"
+                label="Новый курс"
+                mask="number"
+                secondary
+                sm
+                class="mt-7"
+              />
+            </template>
 
-          <template v-else-if="currentType === 2">
-            <VInput
-              v-model="formModel.parameters.markup_percent"
-              label="Наценка, %"
-              mask="number"
-              secondary
-              sm
-              class="mt-2"
-            />
-            <VInput
-              v-model="formModel.parameters.markup_fixed"
-              label="Фиксированная надбавка, ₽"
-              mask="number"
-              secondary
-              sm
-              class="mt-5"
-            />
-            <div class="mt-5">
-              <p class="field-label">
-                Область применения
-              </p>
-              <div class="flex gap-4 mt-2">
-                <VRadio
-                  v-model="formModel.parameters.scope"
-                  value="global"
-                  name="scope"
-                  label="Глобально"
-                />
-                <VRadio
-                  v-model="formModel.parameters.scope"
-                  value="category"
-                  name="scope"
-                  label="Категория"
-                />
-                <VRadio
-                  v-model="formModel.parameters.scope"
-                  value="brand"
-                  name="scope"
-                  label="Бренд"
-                />
-              </div>
-            </div>
-          </template>
-
-          <template v-else-if="currentType === 3">
-            <div class="mt-2">
-              <div class="flex items-center justify-between mb-2">
+            <template v-else-if="currentType === 2">
+              <VInput
+                v-model="formModel.parameters.markup_percent"
+                label="Наценка, %"
+                mask="number"
+                secondary
+                sm
+              />
+              <VInput
+                v-model="formModel.parameters.markup_fixed"
+                label="Фиксированная надбавка, ₽"
+                mask="number"
+                secondary
+                sm
+                class="mt-7"
+              />
+              <div class="mt-7">
                 <p class="field-label">
-                  Пороги остатков
+                  Область применения
                 </p>
-                <VBtn
-                  text="Добавить порог"
-                  outlined
-                  small
-                  @click="addThreshold"
-                />
-              </div>
-              <div
-                v-for="(t, i) in formModel.parameters.thresholds"
-                :key="i"
-                class="threshold-row"
-              >
-                <VInput
-                  v-model="t.stock_quantity"
-                  label="Кол-во (≤)"
-                  mask="number"
-                  secondary
-                  sm
-                  class="flex-1"
-                />
-                <VInput
-                  v-model="t.extra_discount"
-                  label="Скидка, %"
-                  mask="number"
-                  secondary
-                  sm
-                  class="flex-1"
-                />
-                <button
-                  type="button"
-                  class="threshold-row__remove"
-                  @click="removeThreshold(i)"
-                >
-                  <VIcon
-                    name="trash"
-                    class="w-4 h-4"
+                <div class="flex gap-4 mt-2">
+                  <VRadio
+                    v-model="formModel.parameters.scope"
+                    value="global"
+                    name="scope"
+                    label="Глобально"
                   />
-                </button>
+                  <VRadio
+                    v-model="formModel.parameters.scope"
+                    value="category"
+                    name="scope"
+                    label="Категория"
+                  />
+                  <VRadio
+                    v-model="formModel.parameters.scope"
+                    value="brand"
+                    name="scope"
+                    label="Бренд"
+                  />
+                </div>
               </div>
-            </div>
-          </template>
+            </template>
 
-          <template v-else-if="currentType === 4">
-            <div class="mt-2">
-              <p class="field-label">
-                Стратегия
-              </p>
-              <div class="flex gap-4 mt-2">
-                <VRadio
-                  v-model="formModel.parameters.strategy"
-                  value="cheaper_by"
-                  name="strategy"
-                  label="Быть дешевле на X%"
-                />
-                <VRadio
-                  v-model="formModel.parameters.strategy"
-                  value="average_plus"
-                  name="strategy"
-                  label="Среднее + наценка"
-                />
+            <template v-else-if="currentType === 3">
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <p class="field-label">
+                    Пороги остатков
+                  </p>
+                  <VBtn
+                    text="Добавить порог"
+                    outlined
+                    small
+                    @click="addThreshold"
+                  />
+                </div>
+                <div
+                  v-for="(t, i) in formModel.parameters.thresholds"
+                  :key="i"
+                  class="threshold-row"
+                >
+                  <VInput
+                    v-model="t.stock_quantity"
+                    label="Кол-во (≤)"
+                    mask="number"
+                    secondary
+                    sm
+                    class="flex-1"
+                  />
+                  <VInput
+                    v-model="t.extra_discount"
+                    label="Скидка, %"
+                    mask="number"
+                    secondary
+                    sm
+                    class="flex-1"
+                  />
+                  <button
+                    type="button"
+                    class="threshold-row__remove"
+                    @click="removeThreshold(i)"
+                  >
+                    <VIcon
+                      name="trash"
+                      class="w-4 h-4"
+                    />
+                  </button>
+                </div>
               </div>
-            </div>
-            <VInput
-              v-if="formModel.parameters.strategy === 'cheaper_by'"
-              v-model="formModel.parameters.lower_by_percent"
-              label="Дешевле на, %"
-              mask="number"
-              secondary
-              sm
-              class="mt-5"
-            />
-            <VInput
-              v-if="formModel.parameters.strategy === 'average_plus'"
-              v-model="formModel.parameters.markup"
-              label="Наценка на среднее, %"
-              mask="number"
-              secondary
-              sm
-              class="mt-5"
-            />
-          </template>
+            </template>
 
-          <template v-else-if="currentType === 5">
-            <VInput
-              v-model="formModel.parameters.start_date"
-              label="Начало акции (YYYY-MM-DD)"
-              secondary
-              sm
-              class="mt-2"
-              optional
-            />
-            <VInput
-              v-model="formModel.parameters.end_date"
-              label="Конец акции (YYYY-MM-DD)"
-              secondary
-              sm
-              class="mt-5"
-              optional
-            />
-            <VInput
-              v-model="formModel.parameters.promo_discount"
-              label="Скидка акции, %"
-              mask="number"
-              secondary
-              sm
-              class="mt-5"
-            />
-            <VInput
-              v-model="formModel.parameters.max_discount"
-              label="Макс. скидка, %"
-              mask="number"
-              secondary
-              sm
-              class="mt-5"
-            />
-          </template>
-
-          <template v-else-if="currentType === 6">
-            <div class="mt-2">
-              <div class="flex items-center justify-between mb-2">
+            <template v-else-if="currentType === 4">
+              <div>
                 <p class="field-label">
-                  Уровни лояльности
+                  Стратегия
                 </p>
-                <VBtn
-                  text="Добавить уровень"
-                  outlined
-                  small
-                  @click="addLoyaltyLevel"
-                />
-              </div>
-              <div
-                v-for="(lvl, i) in formModel.parameters.levels"
-                :key="i"
-                class="threshold-row"
-              >
-                <VInput
-                  v-model="lvl.min_orders"
-                  label="Мин. заказов"
-                  mask="number"
-                  secondary
-                  sm
-                  class="flex-1"
-                />
-                <VInput
-                  v-model="lvl.discount_percent"
-                  label="Скидка, %"
-                  mask="number"
-                  secondary
-                  sm
-                  class="flex-1"
-                />
-                <button
-                  type="button"
-                  class="threshold-row__remove"
-                  @click="removeLoyaltyLevel(i)"
-                >
-                  <VIcon
-                    name="trash"
-                    class="w-4 h-4"
+                <div class="flex gap-4 mt-2">
+                  <VRadio
+                    v-model="formModel.parameters.strategy"
+                    value="cheaper_by"
+                    name="strategy"
+                    label="Быть дешевле на X%"
                   />
-                </button>
+                  <VRadio
+                    v-model="formModel.parameters.strategy"
+                    value="average_plus"
+                    name="strategy"
+                    label="Среднее + наценка"
+                  />
+                </div>
               </div>
-            </div>
-          </template>
+              <VInput
+                v-if="formModel.parameters.strategy === 'cheaper_by'"
+                v-model="formModel.parameters.lower_by_percent"
+                label="Дешевле на, %"
+                mask="number"
+                secondary
+                sm
+                class="mt-7"
+              />
+              <VInput
+                v-if="formModel.parameters.strategy === 'average_plus'"
+                v-model="formModel.parameters.markup"
+                label="Наценка на среднее, %"
+                mask="number"
+                secondary
+                sm
+                class="mt-7"
+              />
+            </template>
 
-          <template v-else-if="currentType === 7">
-            <VInput
-              v-model="formModel.parameters.step"
-              label="Шаг округления"
-              mask="number"
-              secondary
-              sm
-              class="mt-2"
-            />
-            <div class="mt-5">
-              <p class="field-label">
-                Метод округления
-              </p>
-              <div class="flex gap-4 mt-2">
-                <VRadio
-                  v-model="formModel.parameters.method"
-                  value="ceil"
-                  name="method"
-                  label="Вверх"
-                />
-                <VRadio
-                  v-model="formModel.parameters.method"
-                  value="floor"
-                  name="method"
-                  label="Вниз"
-                />
-                <VRadio
-                  v-model="formModel.parameters.method"
-                  value="round"
-                  name="method"
-                  label="До ближайшего"
-                />
+            <template v-else-if="currentType === 5">
+              <VInput
+                v-model="formModel.parameters.start_date"
+                label="Начало акции (YYYY-MM-DD)"
+                secondary
+                sm
+                optional
+              />
+              <VInput
+                v-model="formModel.parameters.end_date"
+                label="Конец акции (YYYY-MM-DD)"
+                secondary
+                sm
+                class="mt-7"
+                optional
+              />
+              <VInput
+                v-model="formModel.parameters.promo_discount"
+                label="Скидка акции, %"
+                mask="number"
+                secondary
+                sm
+                class="mt-7"
+              />
+              <VInput
+                v-model="formModel.parameters.max_discount"
+                label="Макс. скидка, %"
+                mask="number"
+                secondary
+                sm
+                class="mt-7"
+              />
+            </template>
+
+            <template v-else-if="currentType === 6">
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <p class="field-label">
+                    Уровни лояльности
+                  </p>
+                  <VBtn
+                    text="Добавить уровень"
+                    outlined
+                    small
+                    @click="addLoyaltyLevel"
+                  />
+                </div>
+                <div
+                  v-for="(lvl, i) in formModel.parameters.levels"
+                  :key="i"
+                  class="threshold-row"
+                >
+                  <VInput
+                    v-model="lvl.min_orders"
+                    label="Мин. заказов"
+                    mask="number"
+                    secondary
+                    sm
+                    class="flex-1"
+                  />
+                  <VInput
+                    v-model="lvl.discount_percent"
+                    label="Скидка, %"
+                    mask="number"
+                    secondary
+                    sm
+                    class="flex-1"
+                  />
+                  <button
+                    type="button"
+                    class="threshold-row__remove"
+                    @click="removeLoyaltyLevel(i)"
+                  >
+                    <VIcon
+                      name="trash"
+                      class="w-4 h-4"
+                    />
+                  </button>
+                </div>
               </div>
-            </div>
+            </template>
+
+            <template v-else-if="currentType === 7">
+              <VInput
+                v-model="formModel.parameters.step"
+                label="Шаг округления"
+                mask="number"
+                secondary
+                sm
+              />
+              <div class="mt-7">
+                <p class="field-label">
+                  Метод округления
+                </p>
+                <div class="flex gap-4 mt-2">
+                  <VRadio
+                    v-model="formModel.parameters.method"
+                    value="ceil"
+                    name="method"
+                    label="Вверх"
+                  />
+                  <VRadio
+                    v-model="formModel.parameters.method"
+                    value="floor"
+                    name="method"
+                    label="Вниз"
+                  />
+                  <VRadio
+                    v-model="formModel.parameters.method"
+                    value="round"
+                    name="method"
+                    label="До ближайшего"
+                  />
+                </div>
+              </div>
+            </template>
+
+            <template v-else-if="currentType === 8">
+              <VInput
+                v-model="formModel.parameters.max_extra"
+                label="Макс. доп. скидка, %"
+                mask="number"
+                secondary
+                sm
+              />
+              <VInput
+                v-model="formModel.parameters.min_rating"
+                label="Мин. рейтинг"
+                mask="number"
+                secondary
+                sm
+                class="mt-7"
+              />
+              <VInput
+                v-model="formModel.parameters.max_rating"
+                label="Макс. рейтинг"
+                mask="number"
+                secondary
+                sm
+                class="mt-7"
+              />
+            </template>
           </template>
 
-          <template v-else-if="currentType === 8">
-            <VInput
-              v-model="formModel.parameters.max_extra"
-              label="Макс. доп. скидка, %"
-              mask="number"
-              secondary
-              sm
-              class="mt-2"
-            />
-            <VInput
-              v-model="formModel.parameters.min_rating"
-              label="Мин. рейтинг"
-              mask="number"
-              secondary
-              sm
-              class="mt-5"
-            />
-            <VInput
-              v-model="formModel.parameters.max_rating"
-              label="Макс. рейтинг"
-              mask="number"
-              secondary
-              sm
-              class="mt-5"
-            />
-          </template>
-
-          <h3 class="form-section-title mt-6">
+          <h3 class="form-section-title mt-7">
             Область применения товаров
           </h3>
 
           <ProductsSelector
             v-model="formModel.product_selection"
-            class="mt-2"
           />
         </template>
       </div>
@@ -664,7 +662,7 @@
         />
 
         <VBtn
-          v-if="userHasPermission(Permissions.Edit)"
+          v-if="userHasPermission(Permissions.Edit) || userHasPermission(Permissions.Write)"
           :text="formModel ? 'Сохранить' : 'Редактировать'"
           small
           :loading="saveLoading"
@@ -685,7 +683,6 @@ import { userHasPermission } from '@/common/utils/permissions';
 import {
   createRecalculationRequest,
   updateRecalculationRequest,
-  deleteRecalculationRequest,
   executeRecalculationRequest,
 } from '@/modules/recalculations/api';
 import {
@@ -717,6 +714,24 @@ const emit = defineEmits<{
 const loading = ref(false);
 const saveLoading = ref(false);
 const executeLoading = ref(false);
+const descriptionRef = ref<HTMLTextAreaElement | null>(null);
+
+const growDescription = () => {
+  const el = descriptionRef.value;
+  if (!el) return;
+  el.style.height = 'auto';
+  el.style.height = `${el.scrollHeight}px`;
+};
+
+const itemSnapshot = ref<Recalculation | null>(props.item ?? null);
+
+watch(
+  () => props.item,
+  (val) => {
+    if (val) itemSnapshot.value = val;
+  },
+);
+
 const hasBeenDeleted = ref(false);
 
 const formModel = ref<{
@@ -731,6 +746,11 @@ const formModel = ref<{
   product_selection: any;
 } | null>(null);
 
+watch(
+  () => formModel.value?.description,
+  () => nextTick(growDescription),
+);
+
 const panelTitle = computed(() => {
   if (!props.item) return 'Создание';
   if (formModel.value) return 'Редактирование';
@@ -741,6 +761,12 @@ const currentType = computed((): RecalculationType | null => {
   if (!formModel.value) return null;
   const t = formModel.value.recalculation_type;
   return (typeof t === 'object' && t !== null ? t.value : t) as RecalculationType | null;
+});
+
+const triggerTypeValue = computed((): string => {
+  if (!formModel.value) return '';
+  const t = formModel.value.trigger_type;
+  return typeof t === 'object' && t !== null ? t.value : (t ?? '');
 });
 
 const validationRules = computed(() => ({
@@ -783,13 +809,20 @@ const startEditing = () => {
   formModel.value = {
     name: item.name,
     description: item.description ?? '',
-    recalculation_type: RECALCULATION_TYPES.find((t) => t.value === item.recalculation_type) ?? item.recalculation_type,
+    recalculation_type:
+      RECALCULATION_TYPES.find((t) => t.value === item.recalculation_type)
+      ?? item.recalculation_type,
     priority: item.priority,
     is_active: item.is_active,
-    trigger_type: TRIGGER_TYPES.find((t) => t.value === item.trigger_type) ?? item.trigger_type,
+    trigger_type:
+      TRIGGER_TYPES.find((t) => t.value === item.trigger_type) ?? item.trigger_type,
     trigger_config: item.trigger_config ? { ...item.trigger_config } : {},
-    parameters: item.parameters ? { ...item.parameters } : defaultParamsByType(item.recalculation_type),
-    product_selection: item.product_selection ? { ...item.product_selection } : { ...DEFAULT_PRODUCT_SELECTION },
+    parameters: item.parameters
+      ? { ...item.parameters }
+      : defaultParamsByType(item.recalculation_type),
+    product_selection: item.product_selection
+      ? { ...item.product_selection }
+      : { ...DEFAULT_PRODUCT_SELECTION },
   };
 };
 
@@ -842,7 +875,8 @@ const formatDate = (dateStr: string | null | undefined): string => {
   }
 };
 
-const eventTypeLabel = (val: string): string => EVENT_TYPES.find((e) => e.value === val)?.label ?? val;
+const eventTypeLabel = (val: string): string =>
+  EVENT_TYPES.find((e) => e.value === val)?.label ?? val;
 
 const scopeLabel = (val: string): string => {
   const map: Record<string, string> = {
@@ -881,10 +915,13 @@ const selectionTypeLabel = (val: string): string => {
 
 const saveChanges = async (): Promise<void> => {
   v$.value.$touch();
-  if (v$.value.$invalid || !formModel.value) return;
-
-  saveLoading.value = true;
   try {
+    if (v$.value.$invalid || !formModel.value) {
+      throw new Error('Validation failed');
+    }
+
+    saveLoading.value = true;
+
     const typeVal = formModel.value.recalculation_type;
     const triggerVal = formModel.value.trigger_type;
 
@@ -897,9 +934,9 @@ const saveChanges = async (): Promise<void> => {
       : triggerVal;
 
     let triggerConfig: Record<string, any> | null = null;
-    if (formModel.value.trigger_config && Object.keys(formModel.value.trigger_config).length) {
+    const rawConfig = formModel.value.trigger_config;
+    if (rawConfig && Object.keys(rawConfig).length) {
       triggerConfig = {};
-      const rawConfig = formModel.value.trigger_config;
       if (rawConfig.cron) {
         triggerConfig.cron = rawConfig.cron;
       }
@@ -920,7 +957,8 @@ const saveChanges = async (): Promise<void> => {
       trigger_type: triggerType,
       trigger_config: triggerConfig,
       parameters: formModel.value.parameters ?? {},
-      product_selection: formModel.value.product_selection ?? { ...DEFAULT_PRODUCT_SELECTION },
+      product_selection:
+        formModel.value.product_selection ?? { ...DEFAULT_PRODUCT_SELECTION },
     };
 
     if (props.item) {
@@ -931,8 +969,10 @@ const saveChanges = async (): Promise<void> => {
 
     await props.fetchItems();
     formModel.value = null;
-  } catch (err) {
-    console.error(err);
+  } catch (err: any) {
+    if (err?.message !== 'Validation failed') {
+      console.error(err);
+    }
     throw err;
   } finally {
     saveLoading.value = false;
@@ -965,15 +1005,9 @@ const cancelOrDelete = (onClose: () => void) => {
   onClose();
 };
 
-onBeforeUnmount(async () => {
-  if (hasBeenDeleted.value && props.item) {
-    try {
-      await deleteRecalculationRequest(props.item.id);
-      await props.fetchItems();
-      emit('delete', props.item);
-    } catch (err) {
-      console.error(err);
-    }
+onBeforeUnmount(() => {
+  if (hasBeenDeleted.value && itemSnapshot.value) {
+    emit('delete', itemSnapshot.value);
   }
 });
 </script>
@@ -1041,6 +1075,44 @@ onBeforeUnmount(async () => {
 
     &:hover {
       color: #dc2626;
+    }
+  }
+}
+
+.auto-textarea {
+  position: relative;
+
+  &__label {
+    @apply text-xs-regular;
+    display: block;
+    color: theme('colors.additional.300');
+    margin-bottom: 2px;
+  }
+
+  &__optional {
+    @apply text-xs-regular;
+    color: theme('colors.additional.200');
+    margin-left: 4px;
+  }
+
+  &__input {
+    @apply text-base-regular;
+    display: block;
+    width: 100%;
+    min-height: 48px;
+    padding: 6px 0;
+    border: none;
+    border-bottom: 1px solid theme('colors.main.200');
+    background: transparent;
+    resize: none;
+    overflow: hidden;
+    color: theme('colors.black');
+    font-family: inherit;
+    transition: border-color 0.15s;
+
+    &:focus {
+      outline: none;
+      border-bottom-color: theme('colors.main.400');
     }
   }
 }

@@ -35,14 +35,14 @@ class RelativePriceUpdateRequest(PriceRecalculationFilter):
     type: str
     name: str
     description: Optional[str] = None
-    recalculated_by: str
+    recalculated_by: Optional[str] = None
 
 
 class FixedPriceUpdateRequest(PriceRecalculationFilter):
     value: int
     name: str
     description: Optional[str] = None
-    recalculated_by: str
+    recalculated_by: Optional[str] = None
 
 
 class AverageRelativePriceUpdateRequest(PriceRecalculationFilter):
@@ -51,4 +51,4 @@ class AverageRelativePriceUpdateRequest(PriceRecalculationFilter):
     offset: bool
     name: str
     description: Optional[str] = None
-    recalculated_by: str
+    recalculated_by: Optional[str] = None

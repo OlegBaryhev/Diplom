@@ -24,18 +24,21 @@ async def init_data():
             session.add(superuser_role)
         else:
             superuser_role = existing_roles["superuser"]
+            superuser_role.permissions = dict(SUPERUSER_PERMISSIONS)
 
         if "moderator" not in existing_roles:
             moderator_role = Role(name="moderator", permissions=MODERATOR_PERMISSIONS)
             session.add(moderator_role)
         else:
             moderator_role = existing_roles["moderator"]
+            moderator_role.permissions = dict(MODERATOR_PERMISSIONS)
 
         if "guest" not in existing_roles:
             guest_role = Role(name="guest", permissions=GUEST_PERMISSIONS)
             session.add(guest_role)
         else:
             guest_role = existing_roles["guest"]
+            guest_role.permissions = dict(GUEST_PERMISSIONS)
 
         await session.commit()
 

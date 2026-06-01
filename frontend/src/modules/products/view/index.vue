@@ -52,7 +52,7 @@
             outlined
             @click="modalStore.open('recalculateModal');"
           >
-            Быстрый пересчет цен
+            Быстрый пересчёт
           </VBtn>
 
           <VBtn
@@ -168,7 +168,11 @@
       @closed="itemToDelete = null"
     />
 
-    <RecalculateModal modal-id="recalculateModal" />
+    <RecalculateModal
+      modal-id="recalculateModal"
+      :filters="activeRecalculateFilters"
+      @done="fetchProducts()"
+    />
   </div>
 </template>
 
@@ -312,6 +316,14 @@ const exportProducts = async () => {
     exportProductsLoading.value = false;
   }
 };
+
+const activeRecalculateFilters = computed(() => ({
+  ...(searchQuery.value && { search: searchQuery.value }),
+  ...(filters.value?.min_price && { min_price: Number(filters.value.min_price) * 100 }),
+  ...(filters.value?.max_price && { max_price: Number(filters.value.max_price) * 100 }),
+  ...(filters.value?.category_id?.id && { category_id: filters.value.category_id.id }),
+  ...(filters.value?.brand_id?.id && { brand_id: filters.value.brand_id.id }),
+}));
 
 const buildParams = (p = 1) => ({
   ...(searchQuery.value && { search: searchQuery.value }),
