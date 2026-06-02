@@ -99,17 +99,11 @@ defineEmits<{
 
 const imgError = ref(false);
 
-const canEdit = computed(() =>
-  userHasPermission(Permissions.Edit) || userHasPermission(Permissions.Write),
-);
+const canEdit = computed(() => userHasPermission(Permissions.Edit) || userHasPermission(Permissions.Write));
 
-const primaryImage = computed(() =>
-  props.product.images?.find((img) => img.is_primary) ?? props.product.images?.[0] ?? null,
-);
+const primaryImage = computed(() => props.product.images?.find((img) => img.is_primary) ?? props.product.images?.[0] ?? null);
 
-const discountedPrice = computed(() =>
-  calcDiscountedPrice(props.product.price, props.product.discount),
-);
+const discountedPrice = computed(() => calcDiscountedPrice(props.product.price, props.product.discount));
 
 const fullUrl = (url: string) => (url.startsWith('http') ? url : `${REMOTE_SERVER_URL}${url}`);
 

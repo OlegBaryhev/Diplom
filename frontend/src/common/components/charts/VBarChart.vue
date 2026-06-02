@@ -100,7 +100,13 @@ const props = withDefaults(defineProps<{
   height: 220,
 });
 
-const margin = { top: 20, right: 16, bottom: 40, left: 40 };
+const margin = {
+  top: 20,
+  right: 16,
+  bottom: 40,
+  left: 40,
+};
+
 const svgWidth = computed(() => Math.max(320, props.items.length * 60 + margin.left + margin.right));
 const svgHeight = computed(() => props.height + margin.top + margin.bottom);
 const innerWidth = computed(() => svgWidth.value - margin.left - margin.right);

@@ -185,26 +185,20 @@ const fetchStats = async () => {
   }
 };
 
-const byTypeChartData = computed(() =>
-  (stats.value?.by_type ?? []).map((item: any) => ({
-    label: item.label,
-    value: item.count,
-  })),
-);
+const byTypeChartData = computed(() => (stats.value?.by_type ?? []).map((item: any) => ({
+  label: item.label,
+  value: item.count,
+})));
 
-const byTriggerChartData = computed(() =>
-  (stats.value?.by_trigger ?? []).map((item: any) => ({
-    label: item.label,
-    value: item.count,
-  })),
-);
+const byTriggerChartData = computed(() => (stats.value?.by_trigger ?? []).map((item: any) => ({
+  label: item.label,
+  value: item.count,
+})));
 
-const byDayChartData = computed(() =>
-  (stats.value?.by_day ?? []).map((item: any) => ({
-    label: item.date?.slice(5) ?? '',
-    value: item.count,
-  })),
-);
+const byDayChartData = computed(() => (stats.value?.by_day ?? []).map((item: any) => ({
+  label: item.date?.slice(5) ?? '',
+  value: item.count,
+})));
 
 watch(isSuperuser, (val) => {
   if (val) fetchStats();

@@ -126,7 +126,13 @@ const props = withDefaults(defineProps<{
 
 const uid = Math.random().toString(36).slice(2, 8);
 
-const margin = { top: 20, right: 20, bottom: 36, left: 40 };
+const margin = {
+  top: 20,
+  right: 20,
+  bottom: 36,
+  left: 40,
+};
+
 const svgWidth = computed(() => Math.max(360, props.items.length * 28 + margin.left + margin.right));
 const svgHeight = computed(() => props.height + margin.top + margin.bottom);
 const innerWidth = computed(() => svgWidth.value - margin.left - margin.right);
@@ -139,9 +145,7 @@ const xScale = (i: number) =>
 
 const yScale = (val: number) => innerHeight.value - (val / maxVal.value) * innerHeight.value;
 
-const linePath = computed(() =>
-  props.items.map((item, i) => `${xScale(i)},${yScale(item.value)}`).join(' '),
-);
+const linePath = computed(() => props.items.map((item, i) => `${xScale(i)},${yScale(item.value)}`).join(' '));
 
 const areaPath = computed(() => {
   if (!props.items.length) return '';
