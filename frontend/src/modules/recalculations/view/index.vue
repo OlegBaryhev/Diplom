@@ -247,7 +247,6 @@ refetchRecalculations();
     &:nth-child(3) {
       min-width: 180px;
       width: 100%;
-      max-width: 280px;
       padding-right: 24px;
     }
 
@@ -260,32 +259,33 @@ refetchRecalculations();
     }
 
     &:nth-child(5) {
-      min-width: 80px;
-      width: 80px;
-      max-width: 80px;
+      min-width: 150px;
+      width: 150px;
+      max-width: 150px;
       padding-left: 0;
       padding-right: 24px;
     }
 
     &:nth-child(6) {
-      min-width: 72px;
-      width: 72px;
-      max-width: 80px;
+      min-width: 150px;
+      width: 150px;
+      max-width: 150px;
       padding-left: 0;
       padding-right: 12px;
     }
 
     &:nth-child(7) {
-      min-width: 130px;
-      width: 130px;
+      min-width: 150px;
+      width: 150px;
+      max-width: 150px;
       padding-left: 0;
       padding-right: 12px;
     }
 
     &:nth-child(8) {
-      min-width: 80px;
-      width: 100%;
-      max-width: 80px;
+      min-width: 150px;
+      width: 150px;
+      max-width: 150px;
     }
   }
 }

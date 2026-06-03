@@ -92,6 +92,8 @@ async def get_cart(
             .selectinload(Product.category),
             selectinload(CartItem.product)
             .selectinload(Product.brand),
+            selectinload(CartItem.product)
+            .selectinload(Product.images),
         )
         .where(CartItem.user_id == current_user.id)
     )
@@ -106,7 +108,9 @@ async def add_to_cart(
     user: User = Depends(get_current_user),
 ):
     product_result = await session.execute(
-        select(Product).where(Product.id == item.product_id)
+        select(Product)
+        .options(selectinload(Product.category), selectinload(Product.brand), selectinload(Product.images))
+        .where(Product.id == item.product_id)
     )
     product = product_result.scalar_one_or_none()
 
@@ -116,10 +120,9 @@ async def add_to_cart(
     cart_result = await session.execute(
         select(CartItem)
         .options(
-            selectinload(CartItem.product)
-            .selectinload(Product.category),
-            selectinload(CartItem.product)
-            .selectinload(Product.brand),
+            selectinload(CartItem.product).selectinload(Product.category),
+            selectinload(CartItem.product).selectinload(Product.brand),
+            selectinload(CartItem.product).selectinload(Product.images),
         )
         .where(CartItem.user_id == user.id, CartItem.product_id == item.product_id)
     )
@@ -127,27 +130,37 @@ async def add_to_cart(
 
     if existing:
         existing.quantity += item.quantity
+        await session.commit()
+        await session.refresh(existing, attribute_names=["product"])
+        result_with_relations = await session.execute(
+            select(CartItem)
+            .options(
+                selectinload(CartItem.product).selectinload(Product.category),
+                selectinload(CartItem.product).selectinload(Product.brand),
+                selectinload(CartItem.product).selectinload(Product.images),
+            )
+            .where(CartItem.id == existing.id)
+        )
+        return result_with_relations.scalar_one()
     else:
-        existing = CartItem(
+        new_item = CartItem(
             user_id=user.id,
             product_id=item.product_id,
             quantity=item.quantity
         )
-        session.add(existing)
-
-    await session.commit()
-
-    result_with_relations = await session.execute(
-        select(CartItem)
-        .options(
-            selectinload(CartItem.product)
-            .selectinload(Product.category),
-            selectinload(CartItem.product)
-            .selectinload(Product.brand),
+        session.add(new_item)
+        await session.commit()
+        await session.refresh(new_item, attribute_names=["product"])
+        result_with_relations = await session.execute(
+            select(CartItem)
+            .options(
+                selectinload(CartItem.product).selectinload(Product.category),
+                selectinload(CartItem.product).selectinload(Product.brand),
+                selectinload(CartItem.product).selectinload(Product.images),
+            )
+            .where(CartItem.id == new_item.id)
         )
-        .where(CartItem.user_id == user.id, CartItem.product_id == item.product_id)
-    )
-    return result_with_relations.scalar_one()
+        return result_with_relations.scalar_one()
 
 @router.put("/getcart/{cart_item_id}", response_model=CartItemRead)
 async def update_cart_item_by_id(
@@ -163,6 +176,8 @@ async def update_cart_item_by_id(
             .selectinload(Product.category),
             selectinload(CartItem.product)
             .selectinload(Product.brand),
+            selectinload(CartItem.product)
+            .selectinload(Product.images),
         )
         .where(CartItem.id == cart_item_id, CartItem.user_id == user.id)
     )
@@ -180,7 +195,6 @@ async def update_cart_item_by_id(
     cart_item.quantity = item.quantity
     await session.commit()
     await session.refresh(cart_item)
-
     return cart_item
 
 
@@ -190,7 +204,6 @@ async def update_cart_item_current_user(
     session: AsyncSession = Depends(get_session),
     user: User = Depends(get_current_user),
 ):
-    print(f"Received item: {item}")
     result = await session.execute(
         select(CartItem)
         .options(
@@ -198,6 +211,8 @@ async def update_cart_item_current_user(
             .selectinload(Product.category),
             selectinload(CartItem.product)
             .selectinload(Product.brand),
+            selectinload(CartItem.product)
+            .selectinload(Product.images),
         )
         .where(CartItem.user_id == user.id, CartItem.product_id == item.product_id)
     )
@@ -212,7 +227,6 @@ async def update_cart_item_current_user(
     cart_item.quantity = item.quantity
     await session.commit()
     await session.refresh(cart_item)
-
     return cart_item
 
 @router.delete("/me", status_code=204)
@@ -233,7 +247,7 @@ async def clear_cart_current_user(
 
 @router.delete("/from_cart/{item_id}", status_code=204)
 async def remove_from_cart(
-    item_id: int, 
+    item_id: int,
     session: AsyncSession = Depends(get_session),
     user: User = Depends(get_current_user)
 ):

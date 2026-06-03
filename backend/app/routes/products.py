@@ -37,9 +37,6 @@ def _load_opts():
         selectinload(Product.images),
     ]
 
-
-# ─── Image management ────────────────────────────────────────────────────────
-
 @router.post("/{product_id}/images", response_model=ProductRead)
 async def upload_product_image(
     product_id: int,
@@ -158,9 +155,6 @@ async def set_primary_image(
     )
     return result.scalar_one()
 
-
-# ─── Export ──────────────────────────────────────────────────────────────────
-
 @router.post("/export/xlsx")
 async def export_products_xlsx(
     search: Optional[str] = Form(None),
@@ -224,9 +218,6 @@ async def export_products_xlsx(
         headers=headers,
     )
 
-
-# ─── Search ───────────────────────────────────────────────────────────────────
-
 class ProductSearchRequest(BaseModel):
     search: Optional[str] = None
     min_price: Optional[int] = None
@@ -273,9 +264,6 @@ async def search_products(
     query = query.offset((search_req.page - 1) * search_req.page_size).limit(search_req.page_size)
     result = await session.execute(query)
     return {"items": result.scalars().all(), "total": total}
-
-
-# ─── CRUD ─────────────────────────────────────────────────────────────────────
 
 @router.get("/{product_id}", response_model=ProductRead)
 async def get_product(product_id: int, session: AsyncSession = Depends(get_session)):
