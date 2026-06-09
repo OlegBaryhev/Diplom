@@ -1,10 +1,16 @@
-from sqlalchemy import Column, Integer, String, DateTime, JSON
+from sqlalchemy import Column, Integer, String, DateTime, JSON, Index
 from app.database import Base
 from sqlalchemy.sql import func
 
 
 class RecalculateHistory(Base):
     __tablename__ = "recalculate_history"
+    __table_args__ = (
+        Index("ix_recalculate_history_recalculated_at", "recalculated_at"),
+        Index("ix_recalculate_history_recalculation_type", "recalculation_type"),
+        Index("ix_recalculate_history_trigger_type", "trigger_type"),
+        Index("ix_recalculate_history_type_trigger", "recalculation_type", "trigger_type"),
+    )
 
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)
