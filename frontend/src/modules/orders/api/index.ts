@@ -15,6 +15,12 @@ export const getOrdersRequest = () =>
 export const searchOrdersRequest = (data?: {
   search?: string;
   sort_by?: string;
+  quantity_from?: number;
+  quantity_to?: number;
+  user_id?: number;
+  statuses?: string[];
+  page?: number;
+  page_size?: number;
 }) => api.post(`${REMOTE_SERVER_URL}/order/search`, data);
 
 export const exportOrdersRequest = (data: any) =>

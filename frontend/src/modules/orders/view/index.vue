@@ -11,10 +11,13 @@
         :column-headers="TABLE_COLUMN_HEADERS"
         :sorting-options="SORTING_OPTIONS"
         show-total
-        :total="orders?.length"
+        :total="total"
+        :page="page"
         :items="orders"
         :loading="loading"
+        :fetching-more-items-func="fetchMoreOrders"
         title="Заказы"
+        @update:page="page = $event"
         @accept-filter="acceptFilters()"
         @clear-filter="clearFilters()"
       >
@@ -95,6 +98,7 @@ import {
   searchOrdersRequest,
   exportOrdersRequest,
 } from '../api';
+import { TABLE_ITEM_COUNT_TO_FETCH } from '@/consts';
 
 import type { OrderRead } from '../types';
 
@@ -144,7 +148,9 @@ const checkDisableClear = (obj) =>
 
 const sorting = ref<string>(SORTING_OPTIONS[0] ?? '');
 
-const orders = ref<OrderRead[] | null>([]);
+const orders = ref<OrderRead[]>([]);
+const page = ref<number>(1);
+const total = ref<number>(0);
 
 const filterLoading = ref<boolean>(false);
 const ordersLoading = ref<boolean>(false);
@@ -199,26 +205,49 @@ const exportOrders = async () => {
 
 const fetchOrders = debounce(async () => {
   ordersLoading.value = true;
+  page.value = 1;
 
   try {
-    const params = {
+    const result = await searchOrdersRequest({
       ...(searchQuery.value && { search: searchQuery.value }),
       ...(filters.value?.quantity_from && { quantity_from: Number(filters.value.quantity_from) }),
       ...(filters.value?.quantity_to && { quantity_to: Number(filters.value.quantity_to) }),
       ...(filters.value?.user?.value && { user_id: filters.value.user.value }),
       ...(filters.value?.status?.value && { statuses: [filters.value.status.value] }),
       ...(sorting.value?.value && { sort_by: sorting.value?.value }),
-    };
+      page: 1,
+      page_size: TABLE_ITEM_COUNT_TO_FETCH,
+    });
 
-    const result = await searchOrdersRequest(params);
-
-    orders.value = result?.data ?? [];
+    orders.value = result?.data?.items ?? [];
+    total.value = result?.data?.total ?? 0;
   } catch (error) {
     console.error(error);
   } finally {
     ordersLoading.value = false;
   }
 });
+
+const fetchMoreOrders = async (): Promise<void> => {
+  try {
+    const result = await searchOrdersRequest({
+      ...(searchQuery.value && { search: searchQuery.value }),
+      ...(filters.value?.quantity_from && { quantity_from: Number(filters.value.quantity_from) }),
+      ...(filters.value?.quantity_to && { quantity_to: Number(filters.value.quantity_to) }),
+      ...(filters.value?.user?.value && { user_id: filters.value.user.value }),
+      ...(filters.value?.status?.value && { statuses: [filters.value.status.value] }),
+      ...(sorting.value?.value && { sort_by: sorting.value?.value }),
+      page: page.value,
+      page_size: TABLE_ITEM_COUNT_TO_FETCH,
+    });
+
+    orders.value = [...orders.value, ...(result?.data?.items ?? [])];
+    total.value = result?.data?.total ?? 0;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
 
 const clearFilters = async (): Promise<void> => {
   temporaryFilters.value = cloneDeep(DEFAULT_FILTERS);

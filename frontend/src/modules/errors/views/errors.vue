@@ -3,7 +3,23 @@
     v-if="typeof errorCode === 'number'"
     class="mt-14 mb-7 text-8xl font-bold text-main-400 leading-none tracking-[8%]"
   >
-    {{ errorCode }}
+    <template v-if="errorCode === 404">
+      <img
+        src="../../../assets/img/Error_404.png"
+        alt="404"
+      />
+    </template>
+
+    <template v-else-if="errorCode === 500">
+      <img
+        src="../../../assets/img/Error_500.png"
+        alt="500"
+      />
+    </template>
+
+    <template v-else>
+      {{ errorCode }}
+    </template>
   </h2>
 
   <div class="text-2xl-semibold mb-6">

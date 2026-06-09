@@ -13,3 +13,5 @@ class OrderSearchRequest(BaseModel):
     quantity_from: Optional[int] = None
     quantity_to: Optional[int] = None
     sort_by: Optional[str] = None
+    page: int = 1
+    page_size: int = 100

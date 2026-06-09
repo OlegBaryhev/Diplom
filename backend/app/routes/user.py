@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from sqlalchemy.orm import selectinload
 from fastapi.responses import StreamingResponse
 from app.database import get_session
 from app.models.user import User
 from app.models.roles import Role
 from app.schemas.user import UserRead, UserBase
+from app.schemas.paginated import PaginatedResponse
 from app.auth.dependencies import get_current_user, has_permission
 from app.auth.security import get_password_hash
 from typing import Optional
@@ -78,18 +79,20 @@ async def create_user(
     await session.refresh(db_user)
     return db_user
 
-@router.post("/search", response_model=list[UserRead])
+@router.post("/search", response_model=PaginatedResponse[UserRead])
 async def search_users(
     search: Optional[str] = Form(None),
     is_active: Optional[bool] = Form(None),
     role_ids: Optional[str] = Form(None),
+    page: int = Form(1),
+    page_size: int = Form(100),
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(has_permission("users_control", "read"))
 ):
-    query = select(User).options(selectinload(User.role_obj))
+    base_query = select(User)
 
     if search:
-        query = query.filter(
+        base_query = base_query.filter(
             or_(
                 User.name.ilike(f"%{search}%"),
                 User.surname.ilike(f"%{search}%"),
@@ -98,16 +101,18 @@ async def search_users(
         )
 
     if is_active is not None:
-        query = query.filter(User.is_active == (1 if is_active else 0))
+        base_query = base_query.filter(User.is_active == (1 if is_active else 0))
 
     if role_ids:
         ids_list = [int(rid.strip()) for rid in role_ids.split(",") if rid.strip().isdigit()]
         if ids_list:
-            query = query.filter(User.role_id.in_(ids_list))
+            base_query = base_query.filter(User.role_id.in_(ids_list))
 
-    result = await session.execute(query)
-    users = result.scalars().all()
-    return users
+    total = (await session.execute(select(func.count()).select_from(base_query.subquery()))).scalar_one()
+
+    items_query = base_query.options(selectinload(User.role_obj)).offset((page - 1) * page_size).limit(page_size)
+    result = await session.execute(items_query)
+    return {"items": result.scalars().all(), "total": total}
 
 @router.get("/get-user/{user_id}", response_model=UserRead)
 async def read_user(

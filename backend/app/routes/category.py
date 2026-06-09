@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Form, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import func
 from app.database import get_session
 from app.models.category import Category
 from app.schemas.category import CategoryCreate, CategoryRead, CategoryBase
+from app.schemas.paginated import PaginatedResponse
 from app.models.user import User, UserRole
 from app.auth.dependencies import get_current_user
 from typing import Optional
@@ -15,12 +17,19 @@ from fastapi.responses import StreamingResponse
 router = APIRouter()
 
 
-@router.post("/search", response_model=list[CategoryRead])
+@router.post("/search", response_model=PaginatedResponse[CategoryRead])
 async def search_categories(
     search: Optional[str] = Form(None),
     sort_by: Optional[str] = Form(None),
+    page: int = Form(1),
+    page_size: int = Form(100),
     session: AsyncSession = Depends(get_session)
 ):
+    count_query = select(func.count(Category.id))
+    if search:
+        count_query = count_query.where(Category.name.ilike(f"%{search}%"))
+    total = (await session.execute(count_query)).scalar_one()
+
     query = select(Category)
     if search:
         query = query.filter(Category.name.ilike(f"%{search}%"))
@@ -29,8 +38,9 @@ async def search_categories(
     elif sort_by == "name_desc":
         query = query.order_by(Category.name.desc())
 
+    query = query.offset((page - 1) * page_size).limit(page_size)
     result = await session.execute(query)
-    return result.scalars().all()
+    return {"items": result.scalars().all(), "total": total}
 
 
 @router.get("/", response_model=list[CategoryRead])

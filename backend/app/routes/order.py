@@ -7,13 +7,14 @@ from io import BytesIO
 from fastapi import APIRouter, Depends, Body, HTTPException, Path, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import or_, asc, desc, and_, func
+from sqlalchemy import or_, asc, desc, and_, func, distinct
 from sqlalchemy.orm import selectinload, joinedload
 from app.database import get_session
 from app.auth.dependencies import get_current_user
 from app.models.order import Order, OrderItem, OrderStatus
 from app.schemas.order import OrderRead, OrderCreate
 from app.schemas.order_search import OrderSearchRequest
+from app.schemas.paginated import PaginatedResponse
 
 import pandas as pd
 
@@ -115,7 +116,7 @@ class OrderReadExtended(OrderRead):
     total_product_varieties: int
     total_product_quantity: int
 
-@router.post("/search", response_model=List[OrderReadExtended])
+@router.post("/search", response_model=PaginatedResponse[OrderReadExtended])
 async def search_orders(
     req: OrderSearchRequest = Body(...),
     session: AsyncSession = Depends(get_session),
@@ -123,7 +124,7 @@ async def search_orders(
 ):
     filters = []
 
-    if not (user.role == "superuser"):  
+    if not (user.role == "superuser"):
         filters.append(Order.user_id == user.id)
     else:
         if req.user_id is not None:
@@ -176,6 +177,10 @@ async def search_orders(
         )
         filters.append(Order.id == subq_quantity.c.order_id)
 
+    total = (await session.execute(
+        select(func.count(distinct(Order.id))).where(and_(*filters))
+    )).scalar_one()
+
     query = (
         select(Order)
         .options(
@@ -196,6 +201,7 @@ async def search_orders(
         elif req.sort_by == "status_desc":
             query = query.order_by(desc(Order.status))
 
+    query = query.offset((req.page - 1) * req.page_size).limit(req.page_size)
     result = await session.execute(query)
     orders = result.scalars().unique().all()
 
@@ -207,10 +213,9 @@ async def search_orders(
         order_dict['user'] = order.user
         order_dict['total_product_varieties'] = total_varieties
         order_dict['total_product_quantity'] = total_quantity
-        order_data = OrderReadExtended(**order_dict)
-        response.append(order_data)
+        response.append(OrderReadExtended(**order_dict))
 
-    return response
+    return {"items": response, "total": total}
 
 @router.post("/export/xlsx")
 async def export_orders_xlsx(

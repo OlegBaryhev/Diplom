@@ -27,3 +27,27 @@ export type AverageRelativePriceRequest = PriceRecalculationFilter & {
   name: string;
   description?: string;
 };
+
+export interface RecalculateHistoryItem {
+  id: number;
+  name: string;
+  description?: string | null;
+  recalculation_type?: number | null;
+  trigger_type?: string | null;
+  recalculated_by: string;
+  recalculated_at: string;
+  parameters: Record<string, any>;
+  products_affected_count?: number | null;
+  execution_time_ms?: number | null;
+}
+
+export interface RecalculateHistorySearchRequest {
+  search?: string;
+  min_date?: string;
+  max_date?: string;
+  recalculation_type?: number | null;
+  trigger_type?: string | null;
+  sort_by?: string;
+  page?: number;
+  page_size?: number;
+}

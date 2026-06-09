@@ -1,7 +1,11 @@
 <template>
-  <div class="flex items-center h-screen w-full">
+  <div
+    class="flex w-full"
+    :class="props.cardsMode ? '' : 'items-center h-screen'"
+  >
     <VFilterPanel
       v-if="!!slots?.filter?.()[0]?.children?.length"
+      v-model:is-open="isOpen"
       :disable-filter-button="disableFilterButton"
       :disable-clear-button="disableClearButton"
       :loading="loading"
@@ -15,6 +19,17 @@
 
     <div
       class="fixed-header-n-table"
+      :style="props.cardsMode ? {
+        height: 'auto',
+        width: 'auto',
+        minWidth: '0',
+        flex: '1',
+        paddingBottom: '0',
+      } : {}"
+      :class="{
+        'fixed-header-n-table--open-filter': isOpen && !!slots?.filter?.()[0]?.children?.length,
+        'fixed-header-n-table--closed-filter': !isOpen && !!slots?.filter?.()[0]?.children?.length,
+      }"
     >
       <VFilterHeader
         v-model:search="searchQuery"
@@ -27,6 +42,12 @@
       >
         <template #actions>
           <slot name="header-actions" />
+        </template>
+        <template
+          v-if="$slots['view-mode']"
+          #view-mode
+        >
+          <slot name="view-mode" />
         </template>
       </VFilterHeader>
 
@@ -97,6 +118,8 @@
           <slot name="noDataText" />
         </template>
       </VNoData>
+
+      <slot name="cards-content" />
     </div>
   </div>
 </template>
@@ -153,6 +176,7 @@ const props = withDefaults(defineProps<{
   sorting?: string;
   sortingOptions?: any;
   actionsList?: any;
+  cardsMode?: boolean;
 }>(), {
   disableSearch: false,
   noFiltering: false,
@@ -168,6 +192,7 @@ const props = withDefaults(defineProps<{
   disableFilterButton: false,
   disableClearButton: false,
   actionsList: [],
+  cardsMode: false,
 });
 
 // eslint-disable-next-line func-call-spacing, no-spaced-func
@@ -182,12 +207,16 @@ const emits = defineEmits<{
   (evt: 'clear-filter'): void;
   (evt: 'handleNoDataButtonClick'): void;
   (evt: 'action', action: any): void;
+  (evt: 'update:filterOpen', value: boolean): void;
 }>();
 
 const sorting = useVModel(props, 'sorting', emits);
 const searchQuery = useVModel(props, 'search', emits);
 
+const isOpen = ref<boolean>(true);
 const slots = useSlots();
+
+watch(isOpen, (v) => emits('update:filterOpen', v), { immediate: true });
 
 watch(
   () => [props.search, props.appliedFilterData, props.activeTab],
@@ -213,11 +242,12 @@ watch(windowScroll.y, (newScrollY, oldScrollY) => {
 <style lang="scss" scoped>
 .table {
   display: block;
+  height: 100%;
 
   :deep() .flex-table__header {
     position: sticky;
-    top: 68px;
-    z-index: 60;
+    top: 0;
+    z-index: 56;
     transition: top 0.2s;
   }
 
@@ -227,7 +257,7 @@ watch(windowScroll.y, (newScrollY, oldScrollY) => {
   }
 
   &--reduced-header-top :deep() .flex-table__header {
-    top: 4px;
+    top: 0px;
   }
 
   &--hide-header :deep() .flex-table__header{
@@ -242,6 +272,16 @@ watch(windowScroll.y, (newScrollY, oldScrollY) => {
   height: 100%;
   display: flex;
   flex-direction: column;
+  margin-left: 0px;
+  transition: margin-left 0.2s linear;
+
+  &--open-filter {
+    margin-left: 350px;
+  }
+
+  &--closed-filter {
+    margin-left: 70px;
+  }
 }
 
 .no-data-block {

@@ -4,31 +4,36 @@ export const LOGS_PAGES_MENU: RouteMenu[] = [
   {
     id: 11,
     name: 'Логи',
-    svg_name: 'db',
+    svg_name: 'archive',
     routeName: 'logs',
     submenu: [
       {
         id: 12,
+        name: 'Настройки логгирования',
+        routeName: 'logs',
+      },
+      {
+        id: 13,
         name: 'Логи таблицы "Бренды"',
         routeName: 'brand_log',
       },
       {
-        id: 13,
+        id: 14,
         name: 'Логи таблицы "Продукты"',
         routeName: 'product_log',
       },
       {
-        id: 14,
+        id: 15,
         name: 'Логи таблицы "Категории"',
         routeName: 'category_log',
       },
       {
-        id: 15,
+        id: 16,
         name: 'Логи таблицы "Заказы"',
         routeName: 'order_log',
       },
       {
-        id: 16,
+        id: 17,
         name: 'Логи таблицы "Пользователи"',
         routeName: 'user_log',
       },
@@ -87,9 +92,21 @@ export const VERTICAL_MENU: RouteMenu[] = [
   },
   {
     id: 8,
-    name: 'История перерасчетов',
-    svg_name: 'clock-thick',
-    routeName: 'recalculate_history',
+    name: 'Перерасчеты',
+    svg_name: 'price-calculating',
+    routeName: 'recalculations',
+    submenu: [
+      {
+        id: 18,
+        name: 'Управление правилами',
+        routeName: 'recalculations',
+      },
+      {
+        id: 19,
+        name: 'История перерасчетов',
+        routeName: 'recalculate_history',
+      },
+    ],
   },
   {
     id: 9,

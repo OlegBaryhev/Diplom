@@ -20,6 +20,8 @@ class CartItemRead(BaseModel):
 class CartSearchRequest(BaseModel):
     search: Optional[str] = None
     sort_by: Optional[str] = None
+    page: int = 1
+    page_size: int = 100
 
 
 class CartSummary(BaseModel):

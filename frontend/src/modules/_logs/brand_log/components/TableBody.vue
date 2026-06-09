@@ -4,7 +4,7 @@
   </VTableCell>
 
   <VTableCell data-test="log-row">
-    {{ JSON.stringify(item?.row) }}
+    {{ JSON.stringify(item?.row_data) }}
   </VTableCell>
 
   <VTableCell data-test="log-changed_at">
@@ -13,7 +13,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { ILogData } from '@/modules/_logs/types.ts';
+import type { ILogData } from '@/modules/_logs/types';
 import { formatDate } from '@/common/utils/format';
 
 /**

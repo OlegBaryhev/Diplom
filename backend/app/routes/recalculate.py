@@ -63,7 +63,7 @@ async def recalculate_relative_current_price(
     history = RecalculateHistory(
         name=req.name,
         description=req.description,
-        recalculated_by=current_user.username,
+        recalculated_by=current_user.email,
         parameters=req.dict(exclude={"recalculated_by"}),
     )
     session.add(history)
@@ -88,7 +88,7 @@ async def recalculate_fixed_value(
     history = RecalculateHistory(
         name=req.name,
         description=req.description,
-        recalculated_by=current_user.username,
+        recalculated_by=current_user.email,
         parameters=req.dict(exclude={"recalculated_by"}),
     )
     session.add(history)
@@ -141,7 +141,7 @@ async def recalculate_average_relative_price(
     history = RecalculateHistory(
         name=req.name,
         description=req.description,
-        recalculated_by=current_user.username,
+        recalculated_by=current_user.email,
         parameters=req.dict(exclude={"recalculated_by"}),
     )
     session.add(history)

@@ -24,18 +24,21 @@ async def init_data():
             session.add(superuser_role)
         else:
             superuser_role = existing_roles["superuser"]
+            superuser_role.permissions = dict(SUPERUSER_PERMISSIONS)
 
         if "moderator" not in existing_roles:
             moderator_role = Role(name="moderator", permissions=MODERATOR_PERMISSIONS)
             session.add(moderator_role)
         else:
             moderator_role = existing_roles["moderator"]
+            moderator_role.permissions = dict(MODERATOR_PERMISSIONS)
 
         if "guest" not in existing_roles:
             guest_role = Role(name="guest", permissions=GUEST_PERMISSIONS)
             session.add(guest_role)
         else:
             guest_role = existing_roles["guest"]
+            guest_role.permissions = dict(GUEST_PERMISSIONS)
 
         await session.commit()
 
@@ -91,14 +94,16 @@ async def init_data():
         result = await session.execute(select(Product))
         products = result.scalars().all()
         if not products:
-            for i in range(1, 11):
+            for i in range(1, 301):
                 price = random.randint(50000, 1500000)
                 category = random.choice(categories)
                 brand = random.choice(brands)
+                discount = random.choice([0, random.randint(5, 50)])
                 product = Product(
                     name=f"Продукт_{i}",
                     description=f"Описание продукта {i}",
                     price=price,
+                    discount=discount,
                     category_id=category.id,
                     brand_id=brand.id
                 )

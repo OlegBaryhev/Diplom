@@ -1,5 +1,6 @@
+<!-- eslint-disable no-spaced-func -->
 <template>
-  <header class="filter-header w-full flex-col flex min-h-[80px] justify-between min-w-fit">
+  <header class="filter-header w-full flex-col flex min-h-[128px] justify-between min-w-fit">
     <div
       v-if="title"
       class="filter-header__title-wrapper min-h-[70px] h-full flex items-center"
@@ -47,28 +48,23 @@
           data-test="sorting"
         />
 
+        <!-- View mode switcher slot (right of sorting) -->
+        <slot name="view-mode" />
+
         <div
           v-if="modesList?.length"
-          class="filter-header__icons-container flex gap-2"
+          class="filter-header__icons-container flex gap-1"
         >
-          <div
+          <VBtn
             v-for="(item, index) in modesList"
             :key="index"
-            class="filter-header__button h-12 w-12 flex justify-center items-center cursor-pointer"
-            :class="{'filter-header__button--selected': selectedItemType === index}"
-            @click="selectedItemType = index"
-          >
-            <VTooltip
-              :content="item.hint"
-              hover-tooltip
-              right
-            >
-              <VIcon
-                class="w-6 h-6"
-                :name="item.icon"
-              />
-            </VTooltip>
-          </div>
+            ghost
+            small
+            :icon="item.icon"
+            :class="{ 'filter-header__button--selected': selectedItemType === index }"
+            :title="item.hint"
+            @click="onModeClick(index)"
+          />
         </div>
       </div>
     </div>
@@ -77,14 +73,14 @@
 
 <script lang="ts" setup>
 const props = withDefaults(defineProps<{
-  title: string,
-  selectedType?: number,
+  title: string;
+  selectedType?: number;
   searchPlaceholder?: string;
-  disableSearch?: boolean,
-  loading?: boolean,
-  skeleton?: boolean,
+  disableSearch?: boolean;
+  loading?: boolean;
+  skeleton?: boolean;
   search?: string;
-  items?: any[],
+  items?: any[];
   sortingOptions?: any;
   sorting?: string;
   modesList?: any[];
@@ -102,47 +98,39 @@ const props = withDefaults(defineProps<{
   searchPlaceholder: 'Поиск',
 });
 
-// eslint-disable-next-line func-call-spacing, no-spaced-func
-const emit = defineEmits<{
-  (evt: 'update:search', searchQuery: string): void;
-  (evt: 'update:sorting', searchQuery: string): void;
+// eslint-disable-next-line func-call-spacing
+const emit = defineEmits<{(evt: 'update:search', searchQuery: string): void;
+  (evt: 'update:sorting', value: string): void;
+  (evt: 'update:selectedType', value: number): void;
 }>();
 
 const searchQuery = useVModel(props, 'search', emit);
 const sorting = useVModel(props, 'sorting', emit);
-
 const selectedItemType = ref<number>(props.selectedType);
+
+watch(() => props.selectedType, (v) => { selectedItemType.value = v; });
+
+const onModeClick = (index: number) => {
+  selectedItemType.value = index;
+  emit('update:selectedType', index);
+};
 </script>
 
 <style lang="scss" scoped>
 .filter-header {
-  &__button {
+  &__button--selected {
+    color: theme('colors.main.DEFAULT');
     position: relative;
-    transition: all 0.3s linear;
-
-    &:hover {
-      filter: brightness(110%);
-    }
 
     &::after {
       content: '';
-      transform-origin: bottom;
+      position: absolute;
       bottom: 0;
+      left: 0;
       width: 100%;
       height: 2px;
-      transition: transform 0.2s linear;
       background: theme('colors.main.DEFAULT');
-      pointer-events: none;
-      position: absolute;
-      transform: scaleY(0);
-    }
-
-    &--selected {
-      color: theme('colors.main.DEFAULT');
-
-      &::after {
-        transform: scaleY(1);
-      }
+      border-radius: 1px;
     }
   }
 }

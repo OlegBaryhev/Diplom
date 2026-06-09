@@ -38,13 +38,13 @@
         <VSidePanelInfoItem
           class="mt-4"
           caption="Данные"
-          :value="JSON.stringify(item?.row)"
-          data-test="brand-row"
+          :value="JSON.stringify(item?.row_data)"
+          data-test="log-row"
         />
       </div>
     </template>
 
-    <!-- <template
+    <template
       #foot="{ onClose }"
     >
       <div class="flex justify-end space-x-4">
@@ -53,12 +53,11 @@
           text="Удалить"
           outlined
           small
-          :disabled="saveChangesLoading"
           data-test="delete-item"
-          @click="console.log('Удалить')"
+          @click="handleDelete(onClose)"
         />
       </div>
-    </template> -->
+    </template>
   </VSidePanel>
 </template>
 
@@ -66,7 +65,7 @@
 import { Permissions } from '@/common/types/permissions';
 import { userHasPermission } from '@/common/utils/permissions';
 import { formatDate } from '@/common/utils/format';
-import type { ILogData } from '@/modules/_logs/types.ts';
+import type { ILogData } from '@/modules/_logs/types';
 
 const props = withDefaults(defineProps<{
   item?: ILogData | null;
@@ -77,7 +76,17 @@ const props = withDefaults(defineProps<{
 // eslint-disable-next-line func-call-spacing, no-spaced-func
 const emits = defineEmits<{
   (evt: 'close'): void;
+  (evt: 'delete', item: ILogData): void;
 }>();
 
-const TITLE = 'Логи таблицы Брендов';
+const TITLE = 'Лог брендов';
+
+const formModel = ref(null);
+
+const handleDelete = (onClose: () => void) => {
+  if (props.item) {
+    emits('delete', props.item);
+  }
+  onClose();
+};
 </script>

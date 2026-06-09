@@ -9,10 +9,13 @@
         :column-headers="TABLE_COLUMN_HEADERS"
         :sorting-options="SORTING_OPTIONS"
         show-total
-        :total="roles.length"
+        :total="total"
+        :page="page"
         :items="roles"
         :loading="loading"
+        :fetching-more-items-func="fetchMoreRoles"
         title="Роли"
+        @update:page="page = $event"
       >
         <template #default="{ item }">
           <TableBody :item="item" />
@@ -51,6 +54,7 @@
 import { debounce } from 'lodash';
 import { useUser } from '@/stores/user';
 import { getRolesRequest, deleteRoleRequest } from '../api';
+import { TABLE_ITEM_COUNT_TO_FETCH } from '@/consts';
 import type { Role } from '../types';
 import TableBody from '../components/TableBody.vue';
 import SidePanel from '../components/SidePanel.vue';
@@ -68,6 +72,8 @@ const SORTING_OPTIONS = [
 const searchQuery = ref('');
 const sorting = ref(SORTING_OPTIONS[0] ?? '');
 const roles = ref<Role[]>([]);
+const page = ref<number>(1);
+const total = ref<number>(0);
 const detailedRole = ref<Role | null>(null);
 const isRoleBeingAdded = ref(false);
 const roleToDelete = ref<Role | null>(null);
@@ -75,16 +81,36 @@ const loading = ref(false);
 
 const fetchRoles = debounce(async () => {
   loading.value = true;
+  page.value = 1;
   try {
     const formData = new FormData();
     if (searchQuery.value) formData.append('search', searchQuery.value);
     if (sorting.value?.value) formData.append('sort_by', sorting.value.value);
+    formData.append('page', '1');
+    formData.append('page_size', TABLE_ITEM_COUNT_TO_FETCH.toString());
     const { data } = await getRolesRequest(formData);
-    roles.value = data;
+    roles.value = data.items;
+    total.value = data.total;
   } finally {
     loading.value = false;
   }
 });
+
+const fetchMoreRoles = async (): Promise<void> => {
+  try {
+    const formData = new FormData();
+    if (searchQuery.value) formData.append('search', searchQuery.value);
+    if (sorting.value?.value) formData.append('sort_by', sorting.value.value);
+    formData.append('page', page.value.toString());
+    formData.append('page_size', TABLE_ITEM_COUNT_TO_FETCH.toString());
+    const { data } = await getRolesRequest(formData);
+    roles.value = [...roles.value, ...data.items];
+    total.value = data.total;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
 
 const deleteRole = async () => {
   if (roleToDelete.value) {

@@ -448,6 +448,7 @@ $tile-bg: #cfcfdf;
     background: theme('colors.main.200');
   }
 }
+
 .system-invisible {
   @apply invisible;
   width: 0 !important;
@@ -480,6 +481,7 @@ $tile-bg: #cfcfdf;
   &__cell-skeleton {
     width: 100%;
     height: 8px;
+
     &--large {
       height: 20px;
     }
@@ -593,11 +595,31 @@ $tile-bg: #cfcfdf;
       pointer-events: none;
     }
   }
+
+  &--disabled-page-mode {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    .flex-table__body {
+      flex: 1;
+      min-height: 0;
+
+      &-scroller {
+        height: 100%;
+      }
+    }
+  }
 }
 
 .actions-styles {
   transition: transform, filter 0.3s ease-in-out;
-  &:hover { transform: scale(1.05); }
-  &:hover:active {transform: scale(0.95); }
+  &:hover {
+    transform: scale(1.05);
+  }
+
+  &:hover:active {
+    transform: scale(0.95);
+  }
 }
 </style>
