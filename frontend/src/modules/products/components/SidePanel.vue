@@ -14,7 +14,7 @@
         >
           <img
             v-if="primaryImage && !thumbError"
-            :src="fullUrl(primaryImage.url)"
+            :src="primaryImage.url"
             :alt="item.name"
             class="side-panel-thumb__img"
             @error="thumbError = true"
@@ -117,19 +117,15 @@
         </template>
 
         <template v-else>
-          <div
-            v-if="props.item"
-            class="images-section"
-          >
+          <div class="images-section">
             <div class="images-section__header">
               <p class="images-section__label">
-                Изображения ({{ currentImages.length }}/10)
+                Изображения ({{ totalImageCount }}/10)
               </p>
               <VBtn
-                v-if="currentImages.length < 10"
+                v-if="totalImageCount < 10"
                 small
                 outlined
-                :loading="uploadingImage"
                 @click="fileInputRef?.click()"
               >
                 Добавить
@@ -142,31 +138,34 @@
               accept="image/jpeg,image/png,image/webp,image/gif"
               multiple
               class="hidden"
-              @change="handleFileUpload"
+              @change="handleFileSelect"
             >
 
             <div
-              v-if="currentImages.length"
+              v-if="displayImages.length"
               class="images-grid"
             >
               <div
-                v-for="img in currentImages"
+                v-for="img in displayImages"
                 :key="img.id"
                 class="image-item"
-                :class="{ 'image-item--primary': img.is_primary }"
+                :class="{
+                  'image-item--primary': img.is_primary,
+                  'image-item--pending': img.isPending,
+                }"
               >
                 <img
-                  :src="fullUrl(img.url)"
+                  :src="img.url"
                   :alt="props.item?.name"
                   class="image-item__img"
                   @error="(e) => (e.target as HTMLImageElement).style.display = 'none'"
                 >
                 <div class="image-item__actions">
                   <button
-                    v-if="!img.is_primary"
+                    v-if="!img.is_primary && (!img.isPending || currentImages.length === 0)"
                     class="image-item__btn"
                     title="Сделать основным"
-                    @click="setPrimary(img.id)"
+                    @click="img.isPending ? setPendingPrimary(img.pendingIndex) : setPrimary(img.id)"
                   >
                     <VIcon
                       name="check"
@@ -176,7 +175,7 @@
                   <button
                     class="image-item__btn image-item__btn--danger"
                     title="Удалить"
-                    @click="removeImage(img.id)"
+                    @click="img.isPending ? removePendingImage(img.pendingIndex) : removeImage(img.id)"
                   >
                     <VIcon
                       name="trash"
@@ -190,6 +189,12 @@
                 >
                   Основное
                 </span>
+                <span
+                  v-if="img.isPending"
+                  class="image-item__pending-badge"
+                >
+                  Новое
+                </span>
               </div>
             </div>
 
@@ -201,16 +206,9 @@
             </p>
           </div>
 
-          <p
-            v-else-if="pendingFiles.length === 0"
-            class="mb-5 text-xs text-additional-300"
-          >
-            Изображения можно добавить после создания товара
-          </p>
-
           <VInput
             v-model="formModel.name"
-            :class="props.item ? 'mt-5' : ''"
+            class="mt-5"
             label="Наименование"
             secondary
             sm
@@ -350,16 +348,49 @@ const emits = defineEmits<{(evt: 'close'): void;
   (evt: 'delete', item: Product): void;
 }>();
 
+const fullUrl = (url: string) => (url.startsWith('http') ? url : `${REMOTE_SERVER_URL}${url}`);
+
+const currentImages = ref<ProductImage[]>([...(props.item?.images ?? [])]);
+
+interface PendingImage {
+  file: File;
+  previewUrl: string;
+  is_primary: boolean;
+}
+const pendingImages = ref<PendingImage[]>([]);
+
+const totalImageCount = computed(() => currentImages.value.length + pendingImages.value.length);
+
+const displayImages = computed(() => [
+  ...currentImages.value.map((img) => ({
+    id: img.id,
+    url: fullUrl(img.url),
+    is_primary: img.is_primary,
+    isPending: false,
+    pendingIndex: -1,
+  })),
+  ...pendingImages.value.map((p, i) => ({
+    id: -(i + 1),
+    url: p.previewUrl,
+    is_primary: p.is_primary,
+    isPending: true,
+    pendingIndex: i,
+  })),
+]);
+
+const primaryImage = computed(() => {
+  const serverPrimary = currentImages.value.find((img) => img.is_primary) ?? currentImages.value[0] ?? null;
+  if (serverPrimary) return { url: fullUrl(serverPrimary.url) };
+  const pendingPrimary = pendingImages.value.find((p) => p.is_primary) ?? pendingImages.value[0] ?? null;
+  if (pendingPrimary) return { url: pendingPrimary.previewUrl };
+  return null;
+});
+
 const dateApiError = ref('');
 const discountError = ref('');
 const thumbError = ref(false);
 const hasBeenDeleted = ref<boolean>(false);
 const fileInputRef = ref<HTMLInputElement | null>(null);
-const uploadingImage = ref(false);
-const currentImages = ref<ProductImage[]>([...(props.item?.images ?? [])]);
-const pendingFiles = ref<File[]>([]);
-
-const primaryImage = computed(() => currentImages.value.find((img) => img.is_primary) ?? currentImages.value[0] ?? null);
 
 const formOptions = ref<{ categories: any[]; brands: any[] } | null>(null);
 
@@ -378,6 +409,7 @@ watch(() => props.item?.images, (imgs) => {
 }, { deep: true });
 
 onBeforeUnmount(() => {
+  pendingImages.value.forEach((p) => URL.revokeObjectURL(p.previewUrl));
   if (hasBeenDeleted.value && props.item) {
     emits('delete', props.item);
   }
@@ -396,8 +428,6 @@ const priceDisplay = computed(() => {
   }
   return formatMoney(props.item.price);
 });
-
-const fullUrl = (url: string) => (url.startsWith('http') ? url : `${REMOTE_SERVER_URL}${url}`);
 
 const validationRules = computed(() => ({
   formModel: {
@@ -445,9 +475,69 @@ if (props.item === null) {
 
 const saveChangesLoading = ref(false);
 
+const handleFileSelect = (e: Event) => {
+  const { files } = (e.target as HTMLInputElement);
+  if (!files?.length) return;
+
+  const remaining = 10 - totalImageCount.value;
+  const toAdd = Array.from(files).slice(0, remaining);
+
+  const next: PendingImage[] = [];
+  toAdd.forEach((file) => {
+    const isPrimary = currentImages.value.length === 0 && pendingImages.value.length === 0 && next.length === 0;
+    next.push({ file, previewUrl: URL.createObjectURL(file), is_primary: isPrimary });
+  });
+  pendingImages.value = [...pendingImages.value, ...next];
+
+  if (fileInputRef.value) fileInputRef.value.value = '';
+};
+
+const removePendingImage = (index: number) => {
+  const removed = pendingImages.value[index];
+  URL.revokeObjectURL(removed.previewUrl);
+  const filtered = pendingImages.value.filter((_, i) => i !== index);
+  if (removed.is_primary && currentImages.value.length === 0 && filtered.length > 0) {
+    filtered[0] = { ...filtered[0], is_primary: true };
+  }
+  pendingImages.value = filtered;
+};
+
+const setPendingPrimary = (index: number) => {
+  pendingImages.value = pendingImages.value.map((p, i) => ({ ...p, is_primary: i === index }));
+};
+
+const removeImage = async (imageId: number) => {
+  if (!props.item) return;
+  try {
+    await deleteProductImageRequest(props.item.id, imageId);
+    currentImages.value = currentImages.value.filter((img) => img.id !== imageId);
+    if (currentImages.value.length && !currentImages.value.some((img) => img.is_primary)) {
+      currentImages.value = currentImages.value.map((img, i) => ({ ...img, is_primary: i === 0 }));
+    }
+    if (currentImages.value.length === 0 && pendingImages.value.length > 0) {
+      pendingImages.value = pendingImages.value.map((p, i) => ({ ...p, is_primary: i === 0 }));
+    }
+  } catch (err) {
+    console.error('Ошибка удаления изображения', err);
+  }
+};
+
+const setPrimary = async (imageId: number) => {
+  if (!props.item) return;
+  try {
+    const { data } = await setPrimaryImageRequest(props.item.id, imageId);
+    currentImages.value = data.images ?? [];
+    pendingImages.value = pendingImages.value.map((p) => ({ ...p, is_primary: false }));
+  } catch (err) {
+    console.error('Ошибка установки основного изображения', err);
+  }
+};
+
 const cancelOrDelete = (onClose: () => void) => {
   if (formModel.value && props.item) {
     formModel.value = null;
+    pendingImages.value.forEach((p) => URL.revokeObjectURL(p.previewUrl));
+    pendingImages.value = [];
     return;
   }
   hasBeenDeleted.value = true;
@@ -484,11 +574,26 @@ const saveOrChange = async (): Promise<void> => {
       brand_id: formModel.value.brand?.id ?? null,
     };
 
+    let productId: number;
     if (props.item) {
       await updateProductRequest(props.item.id, requestData);
+      productId = props.item.id;
     } else {
-      await addProductRequest(requestData);
+      const { data: newProduct } = await addProductRequest(requestData);
+      productId = newProduct.id;
     }
+
+    // eslint-disable-next-line no-restricted-syntax
+    for (const pending of pendingImages.value) {
+      const fd = new FormData();
+      fd.append('file', pending.file);
+      fd.append('is_primary', String(pending.is_primary && currentImages.value.length === 0));
+      // eslint-disable-next-line no-await-in-loop
+      await uploadProductImageRequest(productId, fd);
+    }
+
+    pendingImages.value.forEach((p) => URL.revokeObjectURL(p.previewUrl));
+    pendingImages.value = [];
 
     await props.fetchItems();
   } catch (err: any) {
@@ -500,56 +605,6 @@ const saveOrChange = async (): Promise<void> => {
     throw err;
   } finally {
     saveChangesLoading.value = false;
-  }
-};
-
-const handleFileUpload = async (e: Event) => {
-  if (!props.item) return;
-  const { files } = (e.target as HTMLInputElement);
-  if (!files?.length) return;
-
-  const remaining = 10 - currentImages.value.length;
-  const toUpload = Array.from(files).slice(0, remaining);
-
-  uploadingImage.value = true;
-  try {
-    // eslint-disable-next-line no-restricted-syntax
-    for (const file of toUpload) {
-      const fd = new FormData();
-      fd.append('file', file);
-      fd.append('is_primary', String(currentImages.value.length === 0));
-      // eslint-disable-next-line no-await-in-loop
-      const { data } = await uploadProductImageRequest(props.item.id, fd);
-      currentImages.value = data.images ?? [];
-    }
-  } catch (err) {
-    console.error('Ошибка загрузки изображения', err);
-  } finally {
-    uploadingImage.value = false;
-    if (fileInputRef.value) fileInputRef.value.value = '';
-  }
-};
-
-const removeImage = async (imageId: number) => {
-  if (!props.item) return;
-  try {
-    await deleteProductImageRequest(props.item.id, imageId);
-    currentImages.value = currentImages.value.filter((img) => img.id !== imageId);
-    if (currentImages.value.length && !currentImages.value.some((img) => img.is_primary)) {
-      currentImages.value[0].is_primary = true;
-    }
-  } catch (err) {
-    console.error('Ошибка удаления изображения', err);
-  }
-};
-
-const setPrimary = async (imageId: number) => {
-  if (!props.item) return;
-  try {
-    const { data } = await setPrimaryImageRequest(props.item.id, imageId);
-    currentImages.value = data.images ?? [];
-  } catch (err) {
-    console.error('Ошибка установки основного изображения', err);
   }
 };
 </script>
@@ -600,6 +655,16 @@ const setPrimary = async (imageId: number) => {
 
   &--primary {
     border-color: theme('colors.main.400');
+  }
+
+  &--pending {
+    border-color: theme('colors.additional.200');
+    border-style: dashed;
+  }
+
+  &--primary#{&}--pending {
+    border-color: theme('colors.main.400');
+    border-style: dashed;
   }
 
   &__img {
@@ -662,6 +727,18 @@ const setPrimary = async (imageId: number) => {
     bottom: 4px;
     left: 4px;
     background: theme('colors.main.400');
+    color: white;
+    font-size: 9px;
+    font-weight: 600;
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
+
+  &__pending-badge {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    background: theme('colors.additional.300');
     color: white;
     font-size: 9px;
     font-weight: 600;
