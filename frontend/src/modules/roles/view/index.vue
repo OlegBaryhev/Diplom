@@ -41,7 +41,7 @@
 
     <VConfirmationModal
       id="deleteRole"
-      :title="`Вы действительно хотите удалить роль «${roleToDelete?.display_name || roleToDelete?.name ?? ''}»?`"
+      :title="`Вы действительно хотите удалить роль «${(roleToDelete?.display_name || roleToDelete?.name) ?? ''}»?`"
       text="Роль будет удалена без возможности восстановления"
       confirmation-text="Удалить"
       :async-confirmation-func="deleteRole"
@@ -128,10 +128,25 @@ fetchRoles();
 
 <style scoped lang="scss">
 .items :deep() .table .flex-table-cell {
-  &:first-child {
-    min-width: 200px;
+  &:nth-child(2) {
+    min-width: 80px;
     width: 100%;
-    max-width: 300px;
+    max-width: 80px;
+  }
+
+  &:nth-child(3) {
+    min-width: 140px;
+    width: 100%;
+    max-width: 200px;
+    padding-right: 24px;
+  }
+
+  &:nth-child(4) {
+    min-width: 140px;
+    width: 100%;
+    max-width: 200px;
+    padding-left: 0;
+    padding-right: 24px;
   }
 }
 </style>
