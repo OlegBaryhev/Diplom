@@ -1,10 +1,15 @@
-from sqlalchemy import Column, Integer, String, DateTime, JSON, Boolean
+from sqlalchemy import Column, Integer, String, DateTime, JSON, Boolean, Index
 from app.database import Base
 from sqlalchemy.sql import func
 
 
 class Recalculation(Base):
     __tablename__ = "recalculations"
+    __table_args__ = (
+        Index("ix_recalculations_is_active", "is_active"),
+        Index("ix_recalculations_priority", "priority"),
+        Index("ix_recalculations_recalculation_type", "recalculation_type"),
+    )
 
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)

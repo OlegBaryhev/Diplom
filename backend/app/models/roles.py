@@ -6,6 +6,7 @@ class Role(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, nullable=False)
+    display_name = Column(String, nullable=True)
     permissions = Column(JSON, nullable=False)
 
     def has_permission(self, section: str, action: str) -> bool:

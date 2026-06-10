@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, Index
 from sqlalchemy.orm import relationship
 from app.database import Base
 
@@ -10,6 +10,10 @@ class UserRole(str, enum.Enum):
 
 class User(Base):
     __tablename__ = "user"
+    __table_args__ = (
+        Index("ix_user_role_id", "role_id"),
+        Index("ix_user_is_active", "is_active"),
+    )
 
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
@@ -29,4 +33,10 @@ class User(Base):
     def role(self) -> UserRole | None:
         if self.role_obj:
             return UserRole(self.role_obj.name)
+        return None
+
+    @property
+    def role_name(self) -> str | None:
+        if self.role_obj:
+            return self.role_obj.name
         return None

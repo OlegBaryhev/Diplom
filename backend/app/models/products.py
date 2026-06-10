@@ -1,10 +1,18 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Float
+from sqlalchemy import Column, Integer, String, ForeignKey, Float, Index
 from sqlalchemy.orm import relationship
 from app.database import Base
 
 
 class Product(Base):
     __tablename__ = "products"
+    __table_args__ = (
+        Index("ix_products_category_id", "category_id"),
+        Index("ix_products_brand_id", "brand_id"),
+        Index("ix_products_category_id_brand_id", "category_id", "brand_id"),
+        Index("ix_products_price", "price"),
+        Index("ix_products_stock_quantity", "stock_quantity"),
+        Index("ix_products_rating", "rating"),
+    )
 
     id = Column(Integer, primary_key=True)
     name = Column(String, nullable=False)

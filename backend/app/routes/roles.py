@@ -63,7 +63,7 @@ async def create_role(
     existing = await session.execute(select(Role).where(Role.name == role_data.name))
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Role already exists")
-    db_role = Role(name=role_data.name, permissions=role_data.permissions)
+    db_role = Role(name=role_data.name, display_name=role_data.display_name, permissions=role_data.permissions)
     session.add(db_role)
     await session.commit()
     await session.refresh(db_role)
@@ -92,6 +92,8 @@ async def update_role(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Role not found")
     if role_update.name is not None:
         role.name = role_update.name
+    if role_update.display_name is not None:
+        role.display_name = role_update.display_name
     if role_update.permissions is not None:
         role.permissions = role_update.permissions
     await session.commit()

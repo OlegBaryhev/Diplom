@@ -9,9 +9,9 @@
         >
           <img
             v-if="profileData?.avatar_url"
-            :src="profileData.avatar_url"
+            :src="avatarUrl"
             class="w-full h-full rounded-full object-cover"
-            alt="avatar"
+            alt=""
           />
 
           <VIcon
@@ -28,7 +28,7 @@
                 {{ `${profileData?.name}${profileData?.surname ? ' ' + profileData?.surname : ''}` || 'Пользователь' }}
               </span>
               <span class="profile__role text-main-300">
-                {{ profileData?.role ? 'Администратор' : ( profileData?.role ?? 'Гость') }}
+                {{ roleDisplayName }}
               </span>
             </div>
           </div>
@@ -126,26 +126,25 @@
     >
       <VLoader />
     </div>
+    <EditUserModel
+      :modal-id="EDIT_USER_MODAL_ID"
+      :user-data="profileData"
+      @save-user="userStore?.getUser()"
+    />
+
+    <VConfirmationModal
+      id="logoutModal"
+      title="Вы действительно хотите выйти?"
+      confirmation-text="Выйти"
+      @confirm="exitFromUser()"
+    />
+
+    <AvatarEditorModal
+      :modal-id="AVATAR_MODAL_ID"
+      :current-avatar-url="profileData?.avatar_url"
+      @saved="onAvatarSaved"
+    />
   </section>
-
-  <EditUserModel
-    :modal-id="EDIT_USER_MODAL_ID"
-    :user-data="profileData"
-    @save-user="userStore?.getUser()"
-  />
-
-  <VConfirmationModal
-    id="logoutModal"
-    title="Вы действительно хотите выйти?"
-    confirmation-text="Выйти"
-    @confirm="exitFromUser()"
-  />
-
-  <AvatarEditorModal
-    :modal-id="AVATAR_MODAL_ID"
-    :current-avatar-url="profileData?.avatar_url"
-    @saved="onAvatarSaved"
-  />
 </template>
 
 <script lang="ts" setup>
@@ -158,6 +157,7 @@ import AvatarEditorModal from '../components/AvatarEditorModal.vue';
 import { getRecalculationStatisticsRequest } from '@/modules/recalculations/api';
 import VBarChart from '@/common/components/charts/VBarChart.vue';
 import VLineChart from '@/common/components/charts/VLineChart.vue';
+import { REMOTE_SERVER_URL, ROLES_LOCALIZATION_NAMES } from '@/consts';
 
 const userStore = useUser();
 const modalStore = useModals();
@@ -166,7 +166,17 @@ const EDIT_USER_MODAL_ID = 'edit-user-modal-id';
 const AVATAR_MODAL_ID = 'avatar-editor-modal';
 
 const profileData = computed(() => userStore?.user);
-const isSuperuser = computed(() => profileData.value?.role === 'superuser');
+const isSuperuser = computed(() => profileData.value?.role_name === 'superuser');
+const roleDisplayName = computed(() => {
+  const roleName = profileData.value?.role_name;
+  if (!roleName) return 'Гость';
+  return (ROLES_LOCALIZATION_NAMES as Record<string, string>)[roleName] ?? roleName;
+});
+const avatarUrl = computed(() => {
+  const url = profileData.value?.avatar_url;
+  if (!url) return '';
+  return url.startsWith('http') ? url : `${REMOTE_SERVER_URL}${url}`;
+});
 const saveChangesLoading = ref(false);
 
 const stats = ref<any>(null);
@@ -210,11 +220,8 @@ const openAvatarEditor = () => {
   modalStore.open(AVATAR_MODAL_ID);
 };
 
-const onAvatarSaved = async (newUrl: string) => {
-  if (profileData.value) {
-    profileData.value.avatar_url = newUrl;
-    await userStore.refreshUser();
-  }
+const onAvatarSaved = async () => {
+  await userStore.getUser();
 };
 </script>
 

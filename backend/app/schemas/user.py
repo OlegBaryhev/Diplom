@@ -21,6 +21,7 @@ class UserRead(UserBase):
     id: int
     is_active: int
     role_id: Optional[int] = None
+    role_name: Optional[str] = None
     permissions: Optional[Dict[str, Dict[str, List[str]]]] = None
 
     class Config:

@@ -5,5 +5,6 @@ export interface PermissionAction {
 export interface Role {
   id: number;
   name: string;
+  display_name?: string;
   permissions: Record<string, Record<string, string[]>>;
 }

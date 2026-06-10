@@ -4,14 +4,20 @@
     @click="emit('openProfileModal')"
   >
     <div
-      class="profile-item__image flex items-center justify-center"
+      class="profile-item__image flex items-center justify-center overflow-hidden"
       :class="{
         'profile-item__image--large': isLarge,
       }"
       @click="toggleIsOpen"
     >
+      <img
+        v-if="profileData?.avatar_url"
+        :src="fullAvatarUrl"
+        class="w-full h-full object-cover"
+        alt=""
+      />
       <VIcon
-        v-if="!profileData?.avatar_url"
+        v-else
         class="profile-item__icon"
         name="plus"
       />
@@ -22,12 +28,14 @@
       class="profile__text w-full flex flex-col cursor-pointer"
     >
       <span class="profile-item__username overflow-hidden whitespace-nowrap min-h-[1em]">{{ `${profileData?.name}${profileData?.surname ? ' ' + profileData?.surname: ''}` || 'Пользователь' }}</span>
-      <span class="profile-item__role overflow-hidden whitespace-nowrap text-main-300">{{ profileData?.role ? 'Администратор' : ( profileData?.role ?? 'Гость') }}</span>
+      <span class="profile-item__role overflow-hidden whitespace-nowrap text-main-300">{{ roleDisplayName }}</span>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
+import { REMOTE_SERVER_URL, ROLES_LOCALIZATION_NAMES } from '@/consts';
+
 const props = withDefaults(defineProps<{
   image?: string | Blob;
   profileData?: any;
@@ -36,6 +44,18 @@ const props = withDefaults(defineProps<{
 }>(), {
   image: null,
   isOpen: false,
+});
+
+const fullAvatarUrl = computed(() => {
+  const url = props.profileData?.avatar_url;
+  if (!url) return '';
+  return url.startsWith('http') ? url : `${REMOTE_SERVER_URL}${url}`;
+});
+
+const roleDisplayName = computed(() => {
+  const roleName = props.profileData?.role_name;
+  if (!roleName) return 'Гость';
+  return (ROLES_LOCALIZATION_NAMES as Record<string, string>)[roleName] ?? roleName;
 });
 
 // eslint-disable-next-line func-call-spacing, no-spaced-func

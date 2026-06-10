@@ -3,6 +3,7 @@ from typing import Dict, List, Optional
 
 class RoleBase(BaseModel):
     name: str
+    display_name: Optional[str] = None
     permissions: Dict[str, Dict[str, List[str]]]
 
 class RoleCreate(RoleBase):
@@ -10,6 +11,7 @@ class RoleCreate(RoleBase):
 
 class RoleUpdate(BaseModel):
     name: Optional[str] = None
+    display_name: Optional[str] = None
     permissions: Optional[Dict[str, Dict[str, List[str]]]] = None
 
 class RoleRead(RoleBase):

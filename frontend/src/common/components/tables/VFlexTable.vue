@@ -352,7 +352,9 @@ const skeletonBodyRows = computed(() => new Array(props.skeletonBodyRowCount).fi
 
 const scrollerItems = computed(() => skeleton.value ? skeletonBodyRows.value : props.items ?? []);
 
-const hasAnyPermission = computed(() => userHasPermission(Permissions.Delete));
+const hasAnyPermission = computed(() =>
+  userHasPermission(Permissions.Delete)
+  || userHasPermission(Permissions.Buy));
 
 const allItemsCheckboxChecked = computed(() => {
   if (!props.itemChecking) {
