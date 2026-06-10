@@ -126,26 +126,25 @@
     >
       <VLoader />
     </div>
+    <EditUserModel
+      :modal-id="EDIT_USER_MODAL_ID"
+      :user-data="profileData"
+      @save-user="userStore?.getUser()"
+    />
+
+    <VConfirmationModal
+      id="logoutModal"
+      title="Вы действительно хотите выйти?"
+      confirmation-text="Выйти"
+      @confirm="exitFromUser()"
+    />
+
+    <AvatarEditorModal
+      :modal-id="AVATAR_MODAL_ID"
+      :current-avatar-url="profileData?.avatar_url"
+      @saved="onAvatarSaved"
+    />
   </section>
-
-  <EditUserModel
-    :modal-id="EDIT_USER_MODAL_ID"
-    :user-data="profileData"
-    @save-user="userStore?.getUser()"
-  />
-
-  <VConfirmationModal
-    id="logoutModal"
-    title="Вы действительно хотите выйти?"
-    confirmation-text="Выйти"
-    @confirm="exitFromUser()"
-  />
-
-  <AvatarEditorModal
-    :modal-id="AVATAR_MODAL_ID"
-    :current-avatar-url="profileData?.avatar_url"
-    @saved="onAvatarSaved"
-  />
 </template>
 
 <script lang="ts" setup>
