@@ -482,31 +482,28 @@ const handleFileSelect = (e: Event) => {
   const remaining = 10 - totalImageCount.value;
   const toAdd = Array.from(files).slice(0, remaining);
 
-  // eslint-disable-next-line no-restricted-syntax
-  for (const file of toAdd) {
-    const isPrimary = currentImages.value.length === 0 && pendingImages.value.length === 0;
-    pendingImages.value.push({
-      file,
-      previewUrl: URL.createObjectURL(file),
-      is_primary: isPrimary,
-    });
-  }
+  const next: PendingImage[] = [];
+  toAdd.forEach((file) => {
+    const isPrimary = currentImages.value.length === 0 && pendingImages.value.length === 0 && next.length === 0;
+    next.push({ file, previewUrl: URL.createObjectURL(file), is_primary: isPrimary });
+  });
+  pendingImages.value = [...pendingImages.value, ...next];
 
   if (fileInputRef.value) fileInputRef.value.value = '';
 };
 
 const removePendingImage = (index: number) => {
-  const [removed] = pendingImages.value.splice(index, 1);
+  const removed = pendingImages.value[index];
   URL.revokeObjectURL(removed.previewUrl);
-  if (removed.is_primary && currentImages.value.length === 0 && pendingImages.value.length > 0) {
-    pendingImages.value[0].is_primary = true;
+  const filtered = pendingImages.value.filter((_, i) => i !== index);
+  if (removed.is_primary && currentImages.value.length === 0 && filtered.length > 0) {
+    filtered[0] = { ...filtered[0], is_primary: true };
   }
+  pendingImages.value = filtered;
 };
 
 const setPendingPrimary = (index: number) => {
-  pendingImages.value.forEach((p, i) => {
-    p.is_primary = i === index;
-  });
+  pendingImages.value = pendingImages.value.map((p, i) => ({ ...p, is_primary: i === index }));
 };
 
 const removeImage = async (imageId: number) => {
@@ -515,10 +512,10 @@ const removeImage = async (imageId: number) => {
     await deleteProductImageRequest(props.item.id, imageId);
     currentImages.value = currentImages.value.filter((img) => img.id !== imageId);
     if (currentImages.value.length && !currentImages.value.some((img) => img.is_primary)) {
-      currentImages.value[0].is_primary = true;
+      currentImages.value = currentImages.value.map((img, i) => ({ ...img, is_primary: i === 0 }));
     }
     if (currentImages.value.length === 0 && pendingImages.value.length > 0) {
-      pendingImages.value.forEach((p, i) => { p.is_primary = i === 0; });
+      pendingImages.value = pendingImages.value.map((p, i) => ({ ...p, is_primary: i === 0 }));
     }
   } catch (err) {
     console.error('Ошибка удаления изображения', err);
@@ -530,7 +527,7 @@ const setPrimary = async (imageId: number) => {
   try {
     const { data } = await setPrimaryImageRequest(props.item.id, imageId);
     currentImages.value = data.images ?? [];
-    pendingImages.value.forEach((p) => { p.is_primary = false; });
+    pendingImages.value = pendingImages.value.map((p) => ({ ...p, is_primary: false }));
   } catch (err) {
     console.error('Ошибка установки основного изображения', err);
   }
