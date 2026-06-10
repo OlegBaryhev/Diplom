@@ -314,7 +314,8 @@ const scroller = ref(null);
 const minTableHeight = computed(() => props.hasFooterButtons ? TABLE_MIN_HEIGHT_WITH_FOOTER_BUTTONS : TABLE_MIN_HEIGHT);
 
 const vScroll = {
-  mounted: (el: HTMLElement) => {
+  mounted: (el: HTMLElement, binding: { value: boolean }) => {
+    if (!binding.value) return;
     OverlayScrollbars({
       target: el,
       elements: {

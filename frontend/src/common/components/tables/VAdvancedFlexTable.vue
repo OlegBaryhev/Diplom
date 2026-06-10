@@ -212,20 +212,18 @@ const onScrollEnd = async (): Promise<void> => {
 
 const handleBodyScroll = () => {
   if (fetchMoreItemsLoading.value) return;
-  const { body } = document;
-  console.log('scroll');
-  if (body.scrollHeight - body.scrollTop - body.clientHeight < 150) {
-    console.log('page');
+  const { documentElement } = document;
+  if (documentElement.scrollHeight - window.scrollY - window.innerHeight < 150) {
     onScrollEnd();
   }
 };
 
 onMounted(() => {
-  document.body.addEventListener('scroll', handleBodyScroll, { passive: true });
+  window.addEventListener('scroll', handleBodyScroll, { passive: true });
 });
 
 onUnmounted(() => {
-  document.body.removeEventListener('scroll', handleBodyScroll);
+  window.removeEventListener('scroll', handleBodyScroll);
 });
 
 const onUncheckAll = () => {
