@@ -34,3 +34,9 @@ class User(Base):
         if self.role_obj:
             return UserRole(self.role_obj.name)
         return None
+
+    @property
+    def role_name(self) -> str | None:
+        if self.role_obj:
+            return self.role_obj.name
+        return None

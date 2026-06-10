@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { useToast } from 'vue-toastification';
 import {
   getCartRequest,
   removeFromCartRequest,
@@ -24,12 +25,17 @@ export const useCart = defineStore('cart', () => {
   };
 
   const addToCart = async (item: any, count: number = 1): Promise<void> => {
+    const toast = useToast();
     addingLoading.value = true;
     try {
       await addToCartRequest({
         product_id: item?.id,
         quantity: count,
       });
+      toast.success(`«${item?.name ?? 'Товар'}» добавлен в корзину`);
+    } catch (e) {
+      toast.error('Не удалось добавить товар в корзину');
+      throw e;
     } finally {
       addingLoading.value = false;
     }

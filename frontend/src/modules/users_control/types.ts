@@ -9,6 +9,7 @@ export interface UserBase {
   name?: string;
   email?: string;
   role: roleType;
+  role_name?: string;
 }
 
 export interface UserItem extends UserBase {

@@ -37,6 +37,9 @@ async def create_tables():
             "ALTER TABLE products ADD COLUMN IF NOT EXISTS rating DOUBLE PRECISION NOT NULL DEFAULT 0.0"
         ))
         await conn.execute(text(
+            "ALTER TABLE roles ADD COLUMN IF NOT EXISTS display_name VARCHAR"
+        ))
+        await conn.execute(text(
             "ALTER TABLE recalculate_history ADD COLUMN IF NOT EXISTS recalculation_type INTEGER"
         ))
         await conn.execute(text(

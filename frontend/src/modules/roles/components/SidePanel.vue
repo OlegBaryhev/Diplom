@@ -8,8 +8,15 @@
     <template #default>
       <div class="content">
         <VInput
+          v-model="formModel.display_name"
+          label="Русское название роли"
+          class="mb-4"
+          secondary
+          sm
+        />
+        <VInput
           v-model="formModel.name"
-          label="Название роли"
+          label="Системное имя (латиница)"
           class="mb-6"
           secondary
           sm
@@ -54,7 +61,7 @@ const props = defineProps<{
 
 const emit = defineEmits(['close']);
 
-const formModel = ref<Partial<Role>>(props.role ? { ...props.role } : { name: '', permissions: {} });
+const formModel = ref<Partial<Role>>(props.role ? { ...props.role } : { name: '', display_name: '', permissions: {} });
 const saveLoading = ref(false);
 
 const rules = {

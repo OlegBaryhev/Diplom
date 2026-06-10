@@ -20,25 +20,31 @@ async def init_data():
         existing_roles = {role.name: role for role in result.scalars().all()}
 
         if "superuser" not in existing_roles:
-            superuser_role = Role(name="superuser", permissions=SUPERUSER_PERMISSIONS)
+            superuser_role = Role(name="superuser", display_name="Администратор", permissions=SUPERUSER_PERMISSIONS)
             session.add(superuser_role)
         else:
             superuser_role = existing_roles["superuser"]
             superuser_role.permissions = dict(SUPERUSER_PERMISSIONS)
+            if not superuser_role.display_name:
+                superuser_role.display_name = "Администратор"
 
         if "moderator" not in existing_roles:
-            moderator_role = Role(name="moderator", permissions=MODERATOR_PERMISSIONS)
+            moderator_role = Role(name="moderator", display_name="Модератор", permissions=MODERATOR_PERMISSIONS)
             session.add(moderator_role)
         else:
             moderator_role = existing_roles["moderator"]
             moderator_role.permissions = dict(MODERATOR_PERMISSIONS)
+            if not moderator_role.display_name:
+                moderator_role.display_name = "Модератор"
 
         if "guest" not in existing_roles:
-            guest_role = Role(name="guest", permissions=GUEST_PERMISSIONS)
+            guest_role = Role(name="guest", display_name="Гость", permissions=GUEST_PERMISSIONS)
             session.add(guest_role)
         else:
             guest_role = existing_roles["guest"]
             guest_role.permissions = dict(GUEST_PERMISSIONS)
+            if not guest_role.display_name:
+                guest_role.display_name = "Гость"
 
         await session.commit()
 

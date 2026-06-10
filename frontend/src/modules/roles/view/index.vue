@@ -41,7 +41,7 @@
 
     <VConfirmationModal
       id="deleteRole"
-      :title="`Вы действительно хотите удалить роль «${roleToDelete?.name ?? ''}»?`"
+      :title="`Вы действительно хотите удалить роль «${roleToDelete?.display_name || roleToDelete?.name ?? ''}»?`"
       text="Роль будет удалена без возможности восстановления"
       confirmation-text="Удалить"
       :async-confirmation-func="deleteRole"
@@ -61,9 +61,12 @@ import SidePanel from '../components/SidePanel.vue';
 import type { ColumnHeader } from '@/common/components/VTable/types';
 
 const userStore = useUser();
-const isSuperuser = computed(() => userStore.user?.role === 'superuser');
+const isSuperuser = computed(() => userStore.user?.role_name === 'superuser');
 
-const TABLE_COLUMN_HEADERS: ColumnHeader[] = [{ name: 'Название', key: 'name' }];
+const TABLE_COLUMN_HEADERS: ColumnHeader[] = [
+  { name: 'Русское название', key: 'display_name' },
+  { name: 'Системное имя', key: 'name' },
+];
 const SORTING_OPTIONS = [
   { value: 'name_asc', name: 'Название: А-Я' },
   { value: 'name_desc', name: 'Название: Я-А' },

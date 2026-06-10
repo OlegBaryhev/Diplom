@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Form, UploadFile, File
 from fastapi.security import OAuth2PasswordRequestForm
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
@@ -9,6 +10,7 @@ from app.models.roles import Role
 from app.schemas.user import UserRead, UserLogin
 from app.auth.security import verify_password, create_access_token, get_password_hash
 from app.auth.dependencies import get_current_user
+from typing import Optional
 import uuid
 import os
 import shutil
@@ -60,9 +62,49 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
         avatar_url=current_user.avatar_url,
         is_active=current_user.is_active,
         role_id=current_user.role_id,
+        role_name=current_user.role_obj.name if current_user.role_obj else None,
         permissions=permissions,
     )
     return user_data
+
+
+class UserEditRequest(BaseModel):
+    email: str
+    name: Optional[str] = None
+    surname: Optional[str] = None
+
+
+@router.put("/edit", response_model=UserRead)
+async def edit_me(
+    user_data: UserEditRequest,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session)
+):
+    if user_data.email:
+        existing = await session.execute(
+            select(User).where(User.email == user_data.email, User.id != current_user.id)
+        )
+        if existing.scalar_one_or_none():
+            raise HTTPException(status_code=400, detail="User with this email already exists")
+        current_user.email = user_data.email
+    if user_data.name is not None:
+        current_user.name = user_data.name
+    if user_data.surname is not None:
+        current_user.surname = user_data.surname
+    session.add(current_user)
+    await session.commit()
+    await session.refresh(current_user)
+    return UserRead(
+        id=current_user.id,
+        email=current_user.email,
+        name=current_user.name,
+        surname=current_user.surname,
+        avatar_url=current_user.avatar_url,
+        is_active=current_user.is_active,
+        role_id=current_user.role_id,
+        role_name=current_user.role_obj.name if current_user.role_obj else None,
+        permissions=current_user.role_obj.permissions if current_user.role_obj else None,
+    )
 
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 async def register(
